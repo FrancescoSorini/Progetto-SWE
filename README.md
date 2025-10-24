@@ -11,8 +11,9 @@ Cosa ho fatto io per collegarmi al repo GitHub:
 8. git pull origin main --allow-unrelated-histories
 
 Dopo le varie modifiche al progetto, faccio commit con l'interfaccia di IntelliJ e poi
-faccio da terminale 
-
-git push origin main
-
+Opzione 1: faccio da terminale
+            git push origin main
 per caricare le modifiche sul repo GitHub
+oppure
+Opzione 2: uso l'interfaccia di IntelliJ per fare il Commit and Push sul repo GitHub collegando
+            l'account GitHub ad IntelliJ
