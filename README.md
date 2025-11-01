@@ -12,7 +12,7 @@ Cosa ho fatto io per collegarmi al repo GitHub:
 
 Dopo le varie modifiche al progetto, faccio commit con l'interfaccia di IntelliJ e poi
 Opzione 1: faccio da terminale
-            >>>git push origin main
+            git push origin main
 per caricare le modifiche sul repo GitHub
 oppure
 Opzione 2: uso l'interfaccia di IntelliJ per fare il Commit and Push sul repo GitHub collegando
