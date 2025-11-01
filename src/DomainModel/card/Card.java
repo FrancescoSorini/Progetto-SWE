@@ -4,7 +4,27 @@ import java.util.List;
 
 public class Card {
     private int cardId;
-    private String cardName;
-    private CardType cardType; // enum: YUGIOH, MAGIC, POKEMON
-    private List<Deck> decks;  // molti-a-molti tramite DeckCard
+    private String name;
+    private CardType type; // enum: YUGIOH, MAGIC, POKEMON
+    //private List<Deck> decks;  // molti-a-molti tramite DeckCard
+
+    public Card(String name, CardType type) {
+        this.name = name;
+        this.type = type;
+    }
+    public String getName() {
+        return name;
+    }
+
+    public CardType getType() {
+        return type;
+    }
+
+    @Override
+    public String toString() {
+        return "Card{" +
+                "name='" + name + '\'' +
+                ", type=" + type.getDisplayName() +
+                '}';
+    }
 }
