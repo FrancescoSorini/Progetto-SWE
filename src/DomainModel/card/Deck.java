@@ -9,4 +9,14 @@ public class Deck {
     private String deckName;
     private User owner;              // molti-a-uno
     private List<Card> cards;        // molti-a-molti
+
+
+    public String displayDeck() {
+        return "Deck{" +
+                "deckName='" + deckName + '\'' +
+                ", owner=" + owner.getUsername() +
+                ", cards=" + cards.stream().map(Card::getName).toList() +
+                '}';
+    }
 }
+

@@ -8,7 +8,7 @@ public class User {
     private int userId;
     private String username;
     private String email;
-    private String passwordHash;
+    private String password;
     private boolean enabled;
     private Role role;
     private List<Deck> decks;              // 1-N

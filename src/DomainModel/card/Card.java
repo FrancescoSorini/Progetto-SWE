@@ -20,8 +20,7 @@ public class Card {
         return type;
     }
 
-    @Override
-    public String toString() {
+    public String displayCard() {
         return "Card{" +
                 "name='" + name + '\'' +
                 ", type=" + type.getDisplayName() +
