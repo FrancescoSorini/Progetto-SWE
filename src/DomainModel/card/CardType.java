@@ -1,9 +1,10 @@
 package DomainModel.card;
 
 public enum CardType {
-    YUGIOH("Yu-Gi-Oh"),
     MAGIC("Magic the Gathering"),
-    POKEMON("Pokémon");
+    POKEMON("Pokémon"),
+    YUGIOH("Yu-Gi-Oh")
+    ;
 
     private final String displayName;
 
@@ -13,5 +14,9 @@ public enum CardType {
 
     public String getDisplayName() {
         return displayName;
+    }
+
+    public int getId() {
+        return this.ordinal() +1; // Ritorna 1 per MAGIC, 2 per POKEMON, 3 per YUGIOH
     }
 }
