@@ -8,7 +8,7 @@ public class User {
     private int userId;
     private String username;
     private String email;
-    private String password;
+    private String pwd;
     private boolean enabled;
     private Role role;
     private List<Deck> decks;// 1-N
@@ -19,23 +19,22 @@ public class User {
     }
 
     // GETTER
-    public int getUserId() {
-        return userId;
-    }
+    public int getUserId() { return userId; }
+    public String getUsername() { return username; }
+    public String getEmail() { return email; }
+    public String getPassword() { return pwd; }
+    public int getRole() { return role.getRoleId();}
 
-    public String getUsername() {
-        return username;
-    }
 
     // SETTER
-    public void setUserId(int userId) {
-        this.userId = userId;
-    }
+    public void setUserId(int userId) { this.userId = userId; }
+    public void setUsername(String username) { this.username = username; }
+    public void setEmail(String email) { this.email = email; }
+    public void setPassword(String password) { this.pwd = password; }
+    public void setEnabled(boolean enabled) { this.enabled = enabled; }
+    public void setRole(Role role) { this.role = role; }
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
+    public boolean isEnabled() { return enabled; }
 }
 
 /*
