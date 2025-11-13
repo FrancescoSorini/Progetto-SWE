@@ -11,16 +11,31 @@ public class User {
     private String password;
     private boolean enabled;
     private Role role;
-    private List<Deck> decks;              // 1-N
+    private List<Deck> decks;// 1-N
     private List<Registration> registrations; // N-M tramite Registrations
 
     public User(String username){
         this.username = username;
     }
 
+    // GETTER
+    public int getUserId() {
+        return userId;
+    }
+
     public String getUsername() {
         return username;
     }
+
+    // SETTER
+    public void setUserId(int userId) {
+        this.userId = userId;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
 }
 
 /*
