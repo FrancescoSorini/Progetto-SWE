@@ -204,17 +204,17 @@ public class UserDAO {
     // ====================================================================================
     // EXTRA: LOGIN VALIDATION
     // ====================================================================================
-    public User validateLogin(String username, String passwordHash) throws SQLException {
+    public User validateLogin(String username, String password) throws SQLException {
         String sql = """
-            SELECT u.user_id, u.username, u.email, u.password_hash, u.is_enabled, r.name AS role_name
+            SELECT u.user_id, u.username, u.email, u.pwd, u.is_enabled, r.name AS role_name
             FROM users u
             JOIN roles r ON u.role_id = r.role_id
-            WHERE u.username = ? AND u.password_hash = ? AND u.is_enabled = TRUE
+            WHERE u.username = ? AND u.pwd = ? AND u.is_enabled = TRUE
         """;
 
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, username);
-            ps.setString(2, passwordHash);
+            ps.setString(2, password);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return mapResultSetToUser(rs);

@@ -9,14 +9,17 @@ import ORM.connection.DatabaseConnection;
 import DomainModel.tournament.*;
 import DomainModel.user.User;
 
+
 public class TournamentDAO {
 
     private final Connection connection;
     private final UserDAO userDAO;
+    private final RegistrationDAO registrationDAO;
 
     public TournamentDAO(Connection connection) {
         this.connection = connection;
         this.userDAO = new UserDAO(connection);
+        this.registrationDAO = new RegistrationDAO(connection);
     }
 
     // ====================================================================================
@@ -76,7 +79,7 @@ public class TournamentDAO {
                     tournament.setStatus(mapIdToStatus(rs.getInt("status_id")));
 
                     // Load registrations
-                    List<Registration> registrations = getRegistrationsForTournament(tournamentId);
+                    List<Registration> registrations = registrationDAO.getRegistrationsByTournament(tournamentId);
                     tournament.setRegistrations(registrations);
 
                     return tournament;
@@ -114,7 +117,7 @@ public class TournamentDAO {
                 tournament.setStatus(mapIdToStatus(rs.getInt("status_id")));
 
                 // Load registrations
-                List<Registration> registrations = getRegistrationsForTournament(rs.getInt("tournament_id"));
+                List<Registration> registrations = registrationDAO.getRegistrationsByTournament(rs.getInt("tournament_id"));
                 tournament.setRegistrations(registrations);
 
                 tournaments.add(tournament);
@@ -151,79 +154,39 @@ public class TournamentDAO {
     // 5) DELETE TOURNAMENT
     // ====================================================================================
     public void deleteTournament(int tournamentId) throws SQLException {
-        String sql = """
-            DELETE 
-            FROM tournaments
-            WHERE tournament_id = ?
-        """;
+        // Prima elimina tutte le registrazioni correlate per evitare violazioni FK
+        String deleteRegistrations = """
+        DELETE FROM registrations
+        WHERE tournament_id = ?
+    """;
+        String deleteTournament = """
+        DELETE FROM tournaments
+        WHERE tournament_id = ?
+    """;
 
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, tournamentId);
-            ps.executeUpdate();
-        }
-    }
+        try {
+            connection.setAutoCommit(false);  // Inizia transazione
 
-    // ====================================================================================
-    // 6) ADD REGISTRATION
-    // ====================================================================================
-    public void addRegistration(int tournamentId, int userId) throws SQLException {
-        String sql = """
-            INSERT INTO registrations (tournament_id, user_id)
-            VALUES (?, ?)
-        """;
-
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, tournamentId);
-            ps.setInt(2, userId);
-            ps.executeUpdate();
-        }
-    }
-
-    // ====================================================================================
-    // 7) REMOVE REGISTRATION
-    // ====================================================================================
-    public void removeRegistration(int tournamentId, int userId) throws SQLException {
-        String sql = """
-            DELETE FROM registrations
-            WHERE tournament_id = ? AND user_id = ?
-        """;
-
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, tournamentId);
-            ps.setInt(2, userId);
-            ps.executeUpdate();
-        }
-    }
-
-    // ====================================================================================
-    // 8) GET REGISTRATIONS FOR TOURNAMENT
-    // ====================================================================================
-    public List<Registration> getRegistrationsForTournament(int tournamentId) throws SQLException {
-        String sql = """
-            SELECT tournament_id, user_id, registration_date
-            FROM registrations 
-            WHERE tournament_id = ?
-        """;
-
-        List<Registration> registrations = new ArrayList<>();
-
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, tournamentId);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    User user = userDAO.getUserById(rs.getInt("user_id"));
-                    Tournament tournament = new Tournament(""); // Dummy tournament for Registration
-                    tournament.setTournamentId(tournamentId);
-
-                    Registration registration = new Registration(tournament, user);
-                    registration.setRegistrationDate(rs.getTimestamp("registration_date").toLocalDateTime());
-
-                    registrations.add(registration);
-                }
+            // Elimina registrazioni
+            try (PreparedStatement ps1 = connection.prepareStatement(deleteRegistrations)) {
+                ps1.setInt(1, tournamentId);
+                ps1.executeUpdate();
             }
+
+            // Elimina torneo
+            try (PreparedStatement ps2 = connection.prepareStatement(deleteTournament)) {
+                ps2.setInt(1, tournamentId);
+                ps2.executeUpdate();
+            }
+
+            connection.commit();  // Conferma transazione
+
+        } catch (SQLException e) {
+            connection.rollback();  // Annulla se errore
+            throw e;  // Rilancia l'eccezione
+        } finally {
+            connection.setAutoCommit(true);  // Ripristina auto-commit
         }
-        return registrations;
     }
 
     // ====================================================================================
