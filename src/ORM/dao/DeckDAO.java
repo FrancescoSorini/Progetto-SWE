@@ -15,10 +15,12 @@ public class DeckDAO {
     private final Connection connection;
 
     public DeckDAO(Connection connection) {
-        this.connection = DatabaseConnection.getConnection();
+        this.connection = connection;
     }
 
-    // --- CREATE DECK ---
+    // ====================================================================================
+    // 1) CREATE DECK
+    // ====================================================================================
     public void createDeck(Deck deck) throws SQLException {
         String sql = """
             INSERT INTO decks (deck_name, user_id)
@@ -37,7 +39,9 @@ public class DeckDAO {
         }
     }
 
-    // --- READ (by Id)---
+    // ====================================================================================
+    // 2) READ by id
+    // ====================================================================================
     public Deck getDeckById(int deckId) throws SQLException {
         String sql = """
             SELECT d.deck_id, d.deck_name, u.user_id, u.username, c.card_id, c.card_name, c.tcg_id 
@@ -87,7 +91,9 @@ public class DeckDAO {
         return deck;
     }
 
-    // --- READ ALL(by UserId) ---
+    // ====================================================================================
+    // 3) READ all decks by user
+    // ====================================================================================
     public List<Deck> getAllDecksByUser(int userId) throws SQLException {
         List<Deck> decks = new ArrayList<>();
         String sql = """
@@ -111,7 +117,9 @@ public class DeckDAO {
         return decks;
     }
 
-    // --- UPDATE DECK NAME ---
+    // ====================================================================================
+    // 4) UPDATE NAME
+    // ====================================================================================
     public void updateDeckName(int deckId, String newName) throws SQLException {
         String sql = """
             UPDATE decks
@@ -126,7 +134,9 @@ public class DeckDAO {
         }
     }
 
-    // -- DELETE DECK ---
+    // ====================================================================================
+    // 5) DELETE
+    // ====================================================================================
     public void deleteDeck(int deckId) throws SQLException {
         String deleteRelations = """
             DELETE
@@ -162,7 +172,9 @@ public class DeckDAO {
         }
     }
 
-    // --- ADD CARD TO DECK ---
+    // ====================================================================================
+    // 6) ADD CARD TO DECK
+    // ====================================================================================
     public void addCardToDeck(int deckId, int cardId) throws SQLException {
         String sql = """
             INSERT INTO decks_cards (deck_id, card_id) VALUES (?, ?)
@@ -175,7 +187,9 @@ public class DeckDAO {
         }
     }
 
-    // --- DELETE CARD FROM DECK ---
+    // ====================================================================================
+    // 7) DELETE CARD FROM DECK
+    // ====================================================================================
     public void removeCardFromDeck(int deckId, int cardId) throws SQLException {
         String sql = """
             DELETE
@@ -190,7 +204,9 @@ public class DeckDAO {
         }
     }
 
-    // --- READ CARDS IN DECK ---
+    // ====================================================================================
+    // 8) READ CARDS IN DECK
+    // ====================================================================================
     public List<Card> findCardsByDeck(int deckId) throws SQLException {
         String sql = """
         SELECT c.card_id, c.card_name, c.tcg_id

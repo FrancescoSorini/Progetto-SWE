@@ -13,10 +13,12 @@ public class CardDAO {
     private final Connection connection;
 
     public CardDAO(Connection connection) {
-        this.connection = DatabaseConnection.getConnection();
+        this.connection = connection;
     }
 
-    // --- CREATE ---
+    // ====================================================================================
+    // 1) CREATE
+    // ====================================================================================
     public void addCard(Card card) throws SQLException {
         String sql = " INSERT INTO cards (card_name, tcg_id) VALUES (?, ?)";
         try(PreparedStatement stmt = connection.prepareStatement(sql)) {
@@ -26,7 +28,9 @@ public class CardDAO {
         }
     }
 
-    // --- READ (by Id)---
+    // ====================================================================================
+    // 2) READ by Id
+    // ====================================================================================
     public Card getCardById(int id) throws SQLException{
         String sql = """ 
             SELECT card_id, card_name, tcg_id 
@@ -48,7 +52,9 @@ public class CardDAO {
         return null; // Carta non trovata
     }
 
-    // --- READ (by Name) ---
+    // ====================================================================================
+    // 3) READ by name
+    // ====================================================================================
     public Card getCardByName(String name) throws SQLException {
         String sql = """
             SELECT card_id, card_name, tcg_id 
@@ -70,7 +76,9 @@ public class CardDAO {
         return null; // Carta non trovata
     }
 
-    // --- READ (all) ---
+    // ====================================================================================
+    // 4) READ all
+    // ====================================================================================
     public List<Card> getAllCards() throws SQLException {
         List<Card> cards = new ArrayList<>();
 
@@ -93,7 +101,9 @@ public class CardDAO {
         return cards;
     }
 
-    // --- UPDATE ---
+    // ====================================================================================
+    // 5) UPDATE
+    // ====================================================================================
     public void updateCard(Card card) throws SQLException {
         String sql = """
             UPDATE cards SET card_name = ?, tcg_id = ? 
@@ -107,7 +117,9 @@ public class CardDAO {
         }
     }
 
-    // --- DELETE ---
+    // ====================================================================================
+    // 6) DELETE
+    // ====================================================================================
     public void deleteCard(int id) throws SQLException {
         String sql = """
             DELETE 

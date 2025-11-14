@@ -12,10 +12,12 @@ public class UserDAO {
     private final Connection connection;
 
     public UserDAO(Connection connection) {
-        this.connection = DatabaseConnection.getConnection();
+        this.connection = connection;
     }
 
-    // --- CREATE USER ---
+    // ====================================================================================
+    // 1) CREATE
+    // ====================================================================================
     public void createUser(User user) throws SQLException {
         String sql = """
             INSERT INTO users (username, email, pwd, is_enabled, role_id)
@@ -39,7 +41,9 @@ public class UserDAO {
         }
     }
 
-    // --- READ (by Id) ---
+    // ====================================================================================
+    // 2) READ by Id
+    // ====================================================================================
     public User getUserById(int userId) throws SQLException {
         String sql = """
                     SELECT u.user_id, u.username, u.email, u.pwd, u.is_enabled, r.name AS role_name
@@ -59,7 +63,9 @@ public class UserDAO {
         return null;
     }
 
-    // --- READ (by username) ---
+    // ====================================================================================
+    // 3) READ by username
+    // ====================================================================================
     public User getUserByUsername(String username) throws SQLException {
         String sql = """
                     SELECT u.user_id, u.username, u.email, u.pwd, u.is_enabled, r.name AS role_name
@@ -79,7 +85,9 @@ public class UserDAO {
         return null;
     }
 
-    // ---READ ALL ---
+    // ====================================================================================
+    // 4) READ all users
+    // ====================================================================================
     public List<User> getAllUsers() throws SQLException {
         String sql = """
                     SELECT u.user_id, u.username, u.email, u.pwd, u.is_enabled, r.name AS role_name
@@ -98,7 +106,9 @@ public class UserDAO {
         return users;
     }
 
-    // --- UPDATE USERNAME ---
+    // ====================================================================================
+    // 5) UPDATE username
+    // ====================================================================================
     public void updateUsername(int userId, String newUsername) throws SQLException {
         String sql = """
                     UPDATE users
@@ -112,7 +122,9 @@ public class UserDAO {
         }
     }
 
-    // --- UPDATE EMAIL ---
+    // ====================================================================================
+    // 6) UPDATE email
+    // ====================================================================================
     public void updateEmail(int userId, String newEmail) throws SQLException {
         String sql = """
                     UPDATE users
@@ -126,7 +138,9 @@ public class UserDAO {
         }
     }
 
-    // --- UPDATE PASSWORD ---
+    // ====================================================================================
+    // 7) UPDATE password
+    // ====================================================================================
     public void updatePassword(int userId, String newPassword) throws SQLException {
         String sql = """
                     UPDATE users
@@ -140,7 +154,9 @@ public class UserDAO {
         }
     }
 
-    // --- UPDATE STATUS ---
+    // ====================================================================================
+    // 8) UPDATE STATUS
+    // ====================================================================================
     public void updateUserEnabled(int userId, boolean enabled) throws SQLException {
         String sql = """
                     UPDATE users
@@ -154,7 +170,9 @@ public class UserDAO {
         }
     }
 
-    // --- UPDATE ROLE ---
+    // ====================================================================================
+    // 9) UPDATE ROLE
+    // ====================================================================================
     public void updateUserRole(int userId, Role newRole) throws SQLException {
         String sql = """
                     UPDATE users
@@ -168,7 +186,9 @@ public class UserDAO {
         }
     }
 
-    // --- DELETE ---
+    // ====================================================================================
+    // 10) DELETE
+    // ====================================================================================
     public void deleteUser(int userId) throws SQLException {
         String sql = """
                     DELETE
@@ -181,7 +201,9 @@ public class UserDAO {
         }
     }
 
-    // --- EXTRA: LOGIN VALIDATION ---
+    // ====================================================================================
+    // EXTRA: LOGIN VALIDATION
+    // ====================================================================================
     public User validateLogin(String username, String passwordHash) throws SQLException {
         String sql = """
             SELECT u.user_id, u.username, u.email, u.password_hash, u.is_enabled, r.name AS role_name
@@ -202,9 +224,9 @@ public class UserDAO {
         return null;
     }
 
-    // ============================================================
+    // =====================================================================================
     // PRIVATE UTILITIES
-    // ============================================================
+    // ====================================================================================
 
     //Mappa un ResultSet a un oggetto User.
     private User mapResultSetToUser(ResultSet rs) throws SQLException {
