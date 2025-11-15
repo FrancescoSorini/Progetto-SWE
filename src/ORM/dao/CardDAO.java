@@ -21,10 +21,16 @@ public class CardDAO {
     // ====================================================================================
     public void addCard(Card card) throws SQLException {
         String sql = " INSERT INTO cards (card_name, tcg_id) VALUES (?, ?)";
-        try(PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try(PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, card.getName());
             stmt.setInt(2, card.getType().getId()); // collegamento a CardType
             stmt.executeUpdate();
+
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                if (rs.next()) {
+                    card.setCardId(rs.getInt(1));
+                }
+            }
         }
     }
 

@@ -14,6 +14,7 @@ public class User {
     private List<Deck> decks;// 1-N
     private List<Registration> registrations; // N-M tramite Registrations
 
+
     public User(String username){
         this.username = username;
     }
