@@ -12,12 +12,10 @@ import DomainModel.user.User;
 public class RegistrationDAO {
     private final Connection connection;
     private final UserDAO userDAO;
-    private final TournamentDAO tournamentDAO;
 
     public RegistrationDAO(Connection connection) {
         this.connection = connection;
         this.userDAO = new UserDAO(connection);
-        this.tournamentDAO = new TournamentDAO(connection);
     }
 
     // ====================================================================================
@@ -91,7 +89,8 @@ public class RegistrationDAO {
                     user.setUserId(userId);
 
                     // Ottieni il torneo completo (senza ricaricare le registrazioni per evitare loop)
-                    Tournament tournament = tournamentDAO.getTournamentById(rs.getInt("tournament_id"));
+                    TournamentDAO tempDAO = new TournamentDAO(connection);
+                    Tournament tournament = tempDAO.getTournamentById(rs.getInt("tournament_id"));
                     // Rimuovi le registrazioni dal torneo per evitare loop
                     tournament.setRegistrations(new ArrayList<>());
 
@@ -153,7 +152,8 @@ public class RegistrationDAO {
 
             while (rs.next()) {
                 // Ottieni il torneo completo (senza ricaricare le registrazioni per evitare loop)
-                Tournament tournament = tournamentDAO.getTournamentById(rs.getInt("tournament_id"));
+                TournamentDAO tempDAO = new TournamentDAO(connection);
+                Tournament tournament = tempDAO.getTournamentById(rs.getInt("tournament_id"));
                 tournament.setRegistrations(new ArrayList<>());  // Evita loop
 
                 // Ottieni l'utente completo

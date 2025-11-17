@@ -29,7 +29,7 @@ public class UserDAO {
             ps.setString(2, user.getEmail());
             ps.setString(3, user.getPassword());
             ps.setBoolean(4, user.isEnabled());
-            ps.setInt(5, user.getRole());
+            ps.setInt(5, user.getRoleId());
 
             ps.executeUpdate();
 

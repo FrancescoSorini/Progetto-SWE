@@ -8,6 +8,7 @@ import org.junit.jupiter.api.*;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -30,6 +31,16 @@ public class testCardDAO {
         //resetto il counter SERIAL prima di iniziare i test
         String sql = "TRUNCATE TABLE cards RESTART IDENTITY CASCADE";
         connection.prepareStatement(sql).executeUpdate();
+    }
+
+    @AfterAll
+    static void cleanup() throws Exception {
+        try (Statement st = connection.createStatement()) {
+            st.executeUpdate("""
+                TRUNCATE TABLE cards
+                RESTART IDENTITY CASCADE
+            """);
+        }
     }
 
     @Test

@@ -14,7 +14,8 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class DeckDAOTest {
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+class testDeckDAO {
 
     private static Connection connection;
     private static DeckDAO deckDAO;
@@ -72,10 +73,27 @@ class DeckDAOTest {
         cardId2 = c2.getCardId();
     }
 
-    // ====================================================================================
-    // 1) CREATE DECK
-    // ====================================================================================
+    @AfterAll
+    static void cleanupDatabase() throws Exception {
+        try (Statement st = connection.createStatement()) {
+            st.executeUpdate("""
+                                TRUNCATE TABLE registrations,
+                                               tournaments,
+                                               decks_cards,
+                                               decks,
+                                               cards,
+                                               users
+                                RESTART IDENTITY CASCADE
+                                """);
+        }
+        if (connection != null && !connection.isClosed()) {
+            connection.close();
+        }
+    }
+
+
     @Test
+    @Order(1)
     void testCreateDeck() throws Exception {
 
         User owner = userDAO.getUserById(userId);
@@ -92,10 +110,9 @@ class DeckDAOTest {
         assertEquals(owner.getUserId(), loaded.getOwner().getUserId());
     }
 
-    // ====================================================================================
-    // 2) GET DECK BY ID (WITH CARDS)
-    // ====================================================================================
+
     @Test
+    @Order(2)
     void testGetDeckByIdWithCards() throws Exception {
 
         User owner = userDAO.getUserById(userId);
@@ -113,10 +130,9 @@ class DeckDAOTest {
         assertEquals(2, loaded.getCards().size());
     }
 
-    // ====================================================================================
-    // 3) GET ALL DECKS BY USER
-    // ====================================================================================
+
     @Test
+    @Order(3)
     void testGetAllDecksByUser() throws Exception {
 
         User owner = userDAO.getUserById(userId);
@@ -131,10 +147,9 @@ class DeckDAOTest {
         assertEquals(2, decks.size());
     }
 
-    // ====================================================================================
-    // 4) UPDATE DECK NAME
-    // ====================================================================================
+
     @Test
+    @Order(4)
     void testUpdateDeckName() throws Exception {
 
         User owner = userDAO.getUserById(userId);
@@ -148,10 +163,9 @@ class DeckDAOTest {
         assertEquals("NewName", updated.getDeckName());
     }
 
-    // ====================================================================================
-    // 5) ADD CARD TO DECK
-    // ====================================================================================
+
     @Test
+    @Order(5)
     void testAddCardToDeck() throws Exception {
 
         User owner = userDAO.getUserById(userId);
@@ -166,10 +180,9 @@ class DeckDAOTest {
         assertEquals(cardId1, cards.get(0).getCardId());
     }
 
-    // ====================================================================================
-    // 6) REMOVE CARD FROM DECK
-    // ====================================================================================
+
     @Test
+    @Order(6)
     void testRemoveCardFromDeck() throws Exception {
 
         User owner = userDAO.getUserById(userId);
@@ -185,10 +198,9 @@ class DeckDAOTest {
         assertEquals(0, cards.size());
     }
 
-    // ====================================================================================
-    // 7) DELETE DECK (with cascade)
-    // ====================================================================================
+
     @Test
+    @Order(7)
     void testDeleteDeck() throws Exception {
 
         User owner = userDAO.getUserById(userId);

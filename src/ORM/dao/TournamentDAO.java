@@ -14,12 +14,10 @@ public class TournamentDAO {
 
     private final Connection connection;
     private final UserDAO userDAO;
-    private final RegistrationDAO registrationDAO;
 
     public TournamentDAO(Connection connection) {
         this.connection = connection;
         this.userDAO = new UserDAO(connection);
-        this.registrationDAO = new RegistrationDAO(connection);
     }
 
     // ====================================================================================
@@ -79,7 +77,8 @@ public class TournamentDAO {
                     tournament.setStatus(mapIdToStatus(rs.getInt("status_id")));
 
                     // Load registrations
-                    List<Registration> registrations = registrationDAO.getRegistrationsByTournament(tournamentId);
+                    RegistrationDAO tempDAO = new RegistrationDAO(connection);
+                    List<Registration> registrations = tempDAO.getRegistrationsByTournament(tournamentId);
                     tournament.setRegistrations(registrations);
 
                     return tournament;
@@ -117,7 +116,8 @@ public class TournamentDAO {
                 tournament.setStatus(mapIdToStatus(rs.getInt("status_id")));
 
                 // Load registrations
-                List<Registration> registrations = registrationDAO.getRegistrationsByTournament(rs.getInt("tournament_id"));
+                RegistrationDAO tempDAO = new RegistrationDAO(connection);
+                List<Registration> registrations = tempDAO.getRegistrationsByTournament(rs.getInt("tournament_id"));
                 tournament.setRegistrations(registrations);
 
                 tournaments.add(tournament);

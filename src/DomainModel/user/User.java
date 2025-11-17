@@ -24,7 +24,8 @@ public class User {
     public String getUsername() { return username; }
     public String getEmail() { return email; }
     public String getPassword() { return pwd; }
-    public int getRole() { return role.getRoleId();}
+    public Role getRole() { return role; }
+    public int getRoleId() { return role.getRoleId();}
 
 
     // SETTER
