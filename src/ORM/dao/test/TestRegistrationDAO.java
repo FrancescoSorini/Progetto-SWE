@@ -16,7 +16,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class testRegistrationDAO {
+public class TestRegistrationDAO {
 
     private static Connection connection;
 
@@ -51,11 +51,7 @@ public class testRegistrationDAO {
 
 
         // Creazione utente Player
-        User user = new User("testUser");
-        user.setEmail("test@mail.com");
-        user.setPassword("pwd123");
-        user.setRole(Role.PLAYER);
-        user.setEnabled(true);
+        User user = new User("testUser", "test@mail.com", "pwd123", true, Role.PLAYER);
         userDAO.createUser(user);
         userId = user.getUserId();
 
@@ -150,7 +146,7 @@ public class testRegistrationDAO {
         List<Registration> list = registrationDAO.getRegistrationsByTournament(tournamentId);
 
         assertEquals(1, list.size());
-        assertEquals(userId, list.get(0).getUser().getUserId());
+        assertEquals(userId, list.getFirst().getUser().getUserId());
     }
 
     @Test

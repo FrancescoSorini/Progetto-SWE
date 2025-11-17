@@ -14,10 +14,21 @@ public class User {
     private List<Deck> decks;// 1-N
     private List<Registration> registrations; // N-M tramite Registrations
 
+    // COSTRUTTORI
+    public User() {}
 
     public User(String username){
         this.username = username;
     }
+
+    public User(String username, String email, String pwd, boolean enabled, Role role) {
+        this.username = username;
+        this.email = email;
+        this.pwd = pwd;
+        this.enabled = enabled;
+        this.role = role;
+    }
+
 
     // GETTER
     public int getUserId() { return userId; }

@@ -14,7 +14,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class testCardDAO {
+public class TestCardDAO {
 
     private static Connection connection;
     private static CardDAO cardDAO;

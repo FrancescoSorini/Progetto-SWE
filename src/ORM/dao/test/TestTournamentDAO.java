@@ -13,7 +13,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class testTournamentDAO {
+public class TestTournamentDAO {
 
     private static Connection connection;
     private TournamentDAO tournamentDAO;
@@ -41,11 +41,7 @@ public class testTournamentDAO {
         userDAO = new UserDAO(connection);
 
         // Create organizer
-        User organizer = new User("organizer");
-        organizer.setEmail("org@example.com");
-        organizer.setPassword("pwd");
-        organizer.setEnabled(true);
-        organizer.setRole(Role.ORGANIZER);
+        User organizer = new User("organizer", "org@example.com", "pwd", true, Role.ORGANIZER);
         userDAO.createUser(organizer);
         organizerId = organizer.getUserId();
     }

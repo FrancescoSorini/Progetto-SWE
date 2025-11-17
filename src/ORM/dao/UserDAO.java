@@ -230,12 +230,14 @@ public class UserDAO {
 
     //Mappa un ResultSet a un oggetto User.
     private User mapResultSetToUser(ResultSet rs) throws SQLException {
-        User user = new User(rs.getString("username"));
+        User user = new User(
+                rs.getString("username"),
+                rs.getString("email"),
+                rs.getString("pwd"),
+                rs.getBoolean("is_enabled"),
+                Role.valueOf(rs.getString("role_name").toUpperCase())
+        );
         user.setUserId(rs.getInt("user_id"));
-        user.setEmail(rs.getString("email"));
-        user.setPassword(rs.getString("pwd"));
-        user.setEnabled(rs.getBoolean("is_enabled"));
-        user.setRole(Role.valueOf(rs.getString("role_name").toUpperCase()));
         return user;
     }
 

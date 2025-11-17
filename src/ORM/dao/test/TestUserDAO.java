@@ -14,7 +14,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class testUserDAO {
+public class TestUserDAO {
 
     private static Connection connection;
     private static UserDAO userDAO;
@@ -51,11 +51,7 @@ public class testUserDAO {
     @Test
     @Order(1)
     void testCreateAndGetUserById() throws SQLException {
-        User u = new User("mario");
-        u.setEmail("mario@example.com");
-        u.setPassword("pwd123");
-        u.setEnabled(true);
-        u.setRole(Role.PLAYER);
+        User u = new User("mario", "mario@example.com", "pwd123", true, Role.PLAYER);
 
         userDAO.createUser(u);
         assertEquals(1, u.getUserId(), "L'ID generato deve essere 1");
@@ -71,11 +67,7 @@ public class testUserDAO {
     @Test
     @Order(2)
     void testGetUserByUsername() throws SQLException {
-        User u = new User("luca");
-        u.setEmail("luca@example.com");
-        u.setPassword("pwd456");
-        u.setEnabled(true);
-        u.setRole(Role.ORGANIZER);
+        User u = new User("luca", "luca@example.com", "pwd456", true, Role.ORGANIZER);
 
         userDAO.createUser(u);
 
@@ -89,17 +81,8 @@ public class testUserDAO {
     @Test
     @Order(3)
     void testGetAllUsers() throws SQLException {
-        User u1 = new User("anna");
-        u1.setEmail("a@example.com");
-        u1.setPassword("123");
-        u1.setEnabled(true);
-        u1.setRole(Role.PLAYER);
-
-        User u2 = new User("mark");
-        u2.setEmail("m@example.com");
-        u2.setPassword("456");
-        u2.setEnabled(false);
-        u2.setRole(Role.ADMIN);
+        User u1 = new User("anna", "a@example.com", "123", true, Role.PLAYER);;
+        User u2 = new User("mark", "m@example.com", "456", false, Role.ADMIN);
 
         userDAO.createUser(u1);
         userDAO.createUser(u2);
@@ -111,11 +94,7 @@ public class testUserDAO {
     @Test
     @Order(4)
     void testUpdateUsername() throws SQLException {
-        User u = new User("oldname");
-        u.setEmail("test@example.com");
-        u.setPassword("pwd");
-        u.setEnabled(true);
-        u.setRole(Role.PLAYER);
+        User u = new User("oldname", "test@example.com", "pwd", true, Role.PLAYER);
 
         userDAO.createUser(u);
 
@@ -129,11 +108,7 @@ public class testUserDAO {
     @Test
     @Order(5)
     void testUpdateEmail() throws SQLException {
-        User u = new User("user");
-        u.setEmail("old@x.com");
-        u.setPassword("pwd");
-        u.setEnabled(true);
-        u.setRole(Role.PLAYER);
+        User u = new User("user", "old@x.com", "pwd", true, Role.PLAYER);
 
         userDAO.createUser(u);
 
@@ -147,11 +122,7 @@ public class testUserDAO {
     @Test
     @Order(6)
     void testUpdatePassword() throws SQLException {
-        User u = new User("user2");
-        u.setEmail("a@b.com");
-        u.setPassword("old");
-        u.setEnabled(true);
-        u.setRole(Role.PLAYER);
+        User u = new User("user2", "a@b.com", "old", true, Role.PLAYER);
 
         userDAO.createUser(u);
 
@@ -165,11 +136,10 @@ public class testUserDAO {
     @Test
     @Order(7)
     void testUpdateUserEnabled() throws SQLException {
-        User u = new User("pino");
+        User u = new User("pino", "p@p.com", "pwd", false, Role.PLAYER);
         u.setEmail("p@p.com");
         u.setPassword("pwd");
         u.setEnabled(false);
-        u.setRole(Role.PLAYER);
 
         userDAO.createUser(u);
 
@@ -183,11 +153,7 @@ public class testUserDAO {
     @Test
     @Order(8)
     void testUpdateUserRole() throws SQLException {
-        User u = new User("roleTest");
-        u.setEmail("r@example.com");
-        u.setPassword("pwd");
-        u.setEnabled(true);
-        u.setRole(Role.PLAYER);
+        User u = new User("roleTest", "r@example.com", "pwd", true, Role.PLAYER);
 
         userDAO.createUser(u);
 
@@ -201,11 +167,7 @@ public class testUserDAO {
     @Test
     @Order(9)
     void testDeleteUser() throws SQLException {
-        User u = new User("toDelete");
-        u.setEmail("d@example.com");
-        u.setPassword("pwd");
-        u.setEnabled(true);
-        u.setRole(Role.PLAYER);
+        User u = new User("toDelete", "d@example.com", "pwd", true, Role.PLAYER);
 
         userDAO.createUser(u);
 
@@ -219,11 +181,7 @@ public class testUserDAO {
     @Test
     @Order(10)
     void testValidateLogin() throws SQLException {
-        User u = new User("loginUser");
-        u.setEmail("login@x.com");
-        u.setPassword("mypassword");
-        u.setEnabled(true);
-        u.setRole(Role.PLAYER);
+        User u = new User("loginUser", "login@x.com", "mypassword", true, Role.PLAYER);
 
         userDAO.createUser(u);
 
