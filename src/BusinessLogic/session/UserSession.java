@@ -5,7 +5,7 @@ import DomainModel.user.User;
 public class UserSession {
 
     private static UserSession instance;
-    private User currentUser;
+    private static User currentUser;
 
     private UserSession() {}
 
@@ -27,15 +27,15 @@ public class UserSession {
         this.currentUser = null;
     }
 
-    public boolean isLoggedIn() {
+    public static boolean isLoggedIn() {
         return currentUser != null;
     }
 
-    public User getCurrentUser() {
+    public static User getCurrentUser() {
         return currentUser;
     }
 
-    public int getUserId() {
+    public static int getUserId() {
         return (currentUser != null) ? currentUser.getUserId() : -1;
     }
 
@@ -47,7 +47,7 @@ public class UserSession {
         return (currentUser != null) ? currentUser.getEmail() : null;
     }
 
-    public boolean isAdmin() {
+    public static boolean isAdmin() {
         return isLoggedIn() && currentUser.getRole().name().equals("ADMIN");
     }
 
