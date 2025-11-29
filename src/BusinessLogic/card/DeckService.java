@@ -76,7 +76,22 @@ public class DeckService {
             throw new SecurityException("Non hai permessi per visualizzare questo deck.");
         }
 
-        // TODO Controllo se esiste già un deck con quel nome per lo stesso utente
+
+        if(newName == null || newName.isBlank()) {
+            throw new IllegalArgumentException("Il nome del deck non può essere vuoto.");
+        }
+
+        if(newName.equals(deck.getDeckName())) {
+            throw new IllegalArgumentException("Il nuovo nome del deck deve essere diverso da quello attuale.");
+        }
+
+        // Controlla che il nuovo nome non sia già usato dallo stesso utente per un altro deck
+        List<Deck> userDecks = deckDAO.getAllDecksByUser(deck.getOwner().getUserId());
+        for(Deck d : userDecks) {
+            if(d.getDeckName().equals(newName) && d.getDeckId() != deckId) {
+                throw new IllegalArgumentException("Hai già un deck con questo nome.");
+            }
+        }
 
         deck.setDeckName(newName);
         deckDAO.updateDeckName(deckId, newName);
