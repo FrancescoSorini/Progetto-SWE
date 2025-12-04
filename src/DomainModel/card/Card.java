@@ -1,38 +1,39 @@
 package DomainModel.card;
 
-import java.util.List;
+import DomainModel.GameType;
 
 public class Card {
     private int cardId;
     private String name;
-    private CardType type; // enum: YUGIOH, MAGIC, POKEMON
-    //private List<Deck> decks;  // molti-a-molti tramite DeckCard
+    private GameType gameType;
 
     // COSTRUTTORI
     public Card(){}
 
-    public Card(String name, CardType type) {
+    public Card(String name, GameType type) {
         this.name = name;
-        this.type = type;
+        this.gameType = type;
     }
 
     //GETTER
     public String getName() { return name; }
-    public CardType getType() { return type; }
+    public GameType getType() { return gameType; }
     public int getCardId(){ return cardId; }
 
     //SETTER
     public void setCardName(String name) { this.name = name; }
-    public void setCardType(CardType type) { this.type = type; }
+    public void setCardType(GameType type) { this.gameType = type; }
     public void setCardId(int cardId) { this.cardId = cardId; }
 
-    //Mostra testualmente la carta
+    /*
+    Mostra testualmente la carta
     public String displayCard() {
         return "Card{" +
                 "name='" + name + '\'' +
-                ", type=" + type.getDisplayName() +
+                ", type=" + gameType.getDisplayName() +
                 '}';
     }
+    */
 
     //Sovrascrivo equals per confrontare le carte in base al loro ID
     @Override

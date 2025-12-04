@@ -2,7 +2,6 @@ package ORM.dao.test;
 
 import ORM.dao.*;
 import DomainModel.card.Card;
-import DomainModel.card.CardType;
 import DomainModel.card.Deck;
 import DomainModel.user.Role;
 import DomainModel.user.User;

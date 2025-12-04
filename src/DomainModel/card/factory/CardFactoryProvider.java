@@ -1,8 +1,6 @@
 //TODO: Approfondisci (Un piccolo Factory of Factories, utile per scegliere dinamicamente quale fabbrica usare.)
 package DomainModel.card.factory;
 
-import DomainModel.card.CardType;
-
 public class CardFactoryProvider {
 
     public static CardFactory getFactory(CardType type) {

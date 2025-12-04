@@ -1,7 +1,6 @@
 package DomainModel.card.factory;
 
 import DomainModel.card.Card;
-import DomainModel.card.CardType;
 
 public class PokemonCardFactory implements CardFactory {
     @Override

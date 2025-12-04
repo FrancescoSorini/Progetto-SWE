@@ -3,7 +3,7 @@ package ORM.dao.test;
 import ORM.dao.CardDAO;
 import ORM.connection.DatabaseConnection;
 import DomainModel.card.Card;
-import DomainModel.card.CardType;
+import DomainModel.GameType;
 import org.junit.jupiter.api.*;
 
 import java.sql.Connection;
@@ -46,7 +46,7 @@ public class TestCardDAO {
     @Test
     @Order(1)
     void testInsertCard() throws SQLException {
-        Card card = new Card("Blue-Eyes White Dragon", CardType.YUGIOH);
+        Card card = new Card("Blue-Eyes White Dragon", GameType.YUGIOH);
         cardDAO.addCard(card);
 
         Card loaded = cardDAO.getCardByName("Blue-Eyes White Dragon");

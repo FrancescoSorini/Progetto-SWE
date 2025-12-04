@@ -7,6 +7,7 @@ import java.util.List;
 import DomainModel.tournament.Registration;
 import DomainModel.tournament.Tournament;
 import DomainModel.user.User;
+import DomainModel.card.Deck;
 
 
 public class RegistrationDAO {
@@ -23,14 +24,15 @@ public class RegistrationDAO {
     // ====================================================================================
     public void createRegistration(Registration registration) throws SQLException {
         String sql = """
-            INSERT INTO registrations (tournament_id, user_id, registration_date)
-            VALUES (?, ?, ?)
+            INSERT INTO registrations (tournament_id, user_id, registration_date, reg_deck)
+            VALUES (?, ?, ?, ?)
         """;
 
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, registration.getTournament().getTournamentId());
             ps.setInt(2, registration.getUser().getUserId());
             ps.setTimestamp(3, Timestamp.valueOf(registration.getRegistrationDate()));
+            ps.setInt(4, registration.getRegDeckId());
             ps.executeUpdate();
         }
     }
@@ -40,7 +42,7 @@ public class RegistrationDAO {
     // ====================================================================================
     public Registration getRegistration(int tournamentId, int userId) throws SQLException {
         String sql = """
-            SELECT tournament_id, user_id, registration_date
+            SELECT tournament_id, user_id, registration_date, reg_deck
             FROM registrations
             WHERE tournament_id = ? AND user_id = ?
         """;
@@ -58,7 +60,7 @@ public class RegistrationDAO {
                     User user = new User("");
                     user.setUserId(userId);
 
-                    Registration registration = new Registration(tournament, user);
+                    Registration registration = new Registration(tournament, user, rs.getInt("reg_deck"));
                     registration.setRegistrationDate(rs.getTimestamp("registration_date").toLocalDateTime());
                     return registration;
                 }
@@ -72,7 +74,7 @@ public class RegistrationDAO {
     // ====================================================================================
     public List<Registration> getRegistrationsByUser(int userId) throws SQLException {
         String sql = """
-            SELECT tournament_id, user_id, registration_date
+            SELECT tournament_id, user_id, registration_date, reg_deck
             FROM registrations
             WHERE user_id = ?
         """;
@@ -94,7 +96,7 @@ public class RegistrationDAO {
                     // Rimuovi le registrazioni dal torneo per evitare loop
                     tournament.setRegistrations(new ArrayList<>());
 
-                    Registration registration = new Registration(tournament, user);
+                    Registration registration = new Registration(tournament, user, rs.getInt("reg_deck"));
                     registration.setRegistrationDate(rs.getTimestamp("registration_date").toLocalDateTime());
                     registrations.add(registration);
                 }
@@ -108,7 +110,7 @@ public class RegistrationDAO {
     // ====================================================================================
     public List<Registration> getRegistrationsByTournament(int tournamentId) throws SQLException {
         String sql = """
-            SELECT tournament_id, user_id, registration_date
+            SELECT tournament_id, user_id, registration_date, reg_deck
             FROM registrations
             WHERE tournament_id = ?
         """;
@@ -127,7 +129,7 @@ public class RegistrationDAO {
                     // Ottieni l'utente completo
                     User user = userDAO.getUserById(rs.getInt("user_id"));
 
-                    Registration registration = new Registration(tournament, user);
+                    Registration registration = new Registration(tournament, user, rs.getInt("reg_deck"));
                     registration.setRegistrationDate(rs.getTimestamp("registration_date").toLocalDateTime());
                     registrations.add(registration);
                 }
@@ -141,7 +143,7 @@ public class RegistrationDAO {
     // ====================================================================================
     public List<Registration> getAllRegistrations() throws SQLException {
         String sql = """
-        SELECT tournament_id, user_id, registration_date
+        SELECT tournament_id, user_id, registration_date, reg_deck
         FROM registrations
     """;
 
@@ -159,7 +161,7 @@ public class RegistrationDAO {
                 // Ottieni l'utente completo
                 User user = userDAO.getUserById(rs.getInt("user_id"));
 
-                Registration registration = new Registration(tournament, user);
+                Registration registration = new Registration(tournament, user, rs.getInt("reg_deck"));
                 registration.setRegistrationDate(rs.getTimestamp("registration_date").toLocalDateTime());
                 registrations.add(registration);
             }

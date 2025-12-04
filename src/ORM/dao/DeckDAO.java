@@ -1,14 +1,13 @@
 package ORM.dao;
 
-import ORM.connection.DatabaseConnection;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 import DomainModel.card.Deck;
 import DomainModel.card.Card;
-import DomainModel.card.CardType;
 import DomainModel.user.User;
+import DomainModel.GameType;
 
 
 public class DeckDAO {
@@ -23,12 +22,13 @@ public class DeckDAO {
     // ====================================================================================
     public void createDeck(Deck deck) throws SQLException {
         String sql = """
-            INSERT INTO decks (deck_name, user_id)
-            VALUES (?, ?)
+            INSERT INTO decks (deck_name, user_id, tcg_id)
+            VALUES (?, ?, ?)
             """;
         try (PreparedStatement ps = this.connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, deck.getDeckName());
             ps.setInt(2, deck.getOwner().getUserId());
+            ps.setInt(3, deck.getGameType().getGameId()); // collegamento GameType
             ps.executeUpdate();
 
             try (ResultSet rs = ps.getGeneratedKeys()) {
@@ -44,7 +44,7 @@ public class DeckDAO {
     // ====================================================================================
     public Deck getDeckById(int deckId) throws SQLException {
         String sql = """
-            SELECT d.deck_id, d.deck_name, u.user_id, u.username, c.card_id, c.card_name, c.tcg_id 
+            SELECT d.deck_id, d.deck_name, d.tcg_id, u.user_id, u.username, c.card_id, c.card_name, c.tcg_id 
             FROM decks d
             JOIN users u ON d.user_id = u.user_id
             LEFT JOIN decks_cards dc ON d.deck_id = dc.deck_id
@@ -67,7 +67,12 @@ public class DeckDAO {
                         owner.setUserId(rs.getInt("user_id"));
 
                         // Crea deck con lista vuota inizialmente
-                        deck = new Deck(rs.getInt("deck_id"), rs.getString("deck_name"), owner, new ArrayList<>());
+                        deck = new Deck(rs.getInt("deck_id"),
+                                        rs.getString("deck_name"),
+                                        owner,
+                                        new ArrayList<>(),
+                                        GameType.fromId(rs.getInt("tcg_id")) // collegamento GameType
+                        );
                     }
 
                     // Aggiungi carte se presenti (fuori dall'if, per tutte le righe)
@@ -75,7 +80,7 @@ public class DeckDAO {
                         Card card = new Card();
                         card.setCardId(rs.getInt("card_id"));
                         card.setCardName(rs.getString("card_name"));
-                        card.setCardType(CardType.values()[rs.getInt("tcg_id") - 1]);  // Mapping corretto
+                        card.setCardType(GameType.fromId(rs.getInt("tcg_id"))); // collegamento GameType
 
                         if (!cards.contains(card)) {  // Evita duplicati
                             cards.add(card);
@@ -97,7 +102,7 @@ public class DeckDAO {
     public List<Deck> getAllDecksByUser(int userId) throws SQLException {
         List<Deck> decks = new ArrayList<>();
         String sql = """
-            SELECT d.deck_id, d.deck_name, u.user_id, u.username 
+            SELECT d.deck_id, d.deck_name, d.tcg_id, u.user_id, u.username 
             FROM decks d
             JOIN users u ON d.user_id = u.user_id
             WHERE d.user_id = ?
@@ -109,7 +114,12 @@ public class DeckDAO {
                 while (rs.next()) {
                     User owner = new User(rs.getString("username"));
                     owner.setUserId(rs.getInt("user_id"));
-                    Deck deck = new Deck(rs.getInt("deck_id"), rs.getString("deck_name"), owner, new ArrayList<>());  // Carte vuote
+                    Deck deck = new Deck(rs.getInt("deck_id"),
+                                         rs.getString("deck_name"),
+                                         owner,
+                                         new ArrayList<>(),
+                                         GameType.fromId(rs.getInt("tcg_id")) // collegamento GameType
+                    );  // Carte vuote
                     decks.add(deck);
                 }
             }
@@ -223,7 +233,7 @@ public class DeckDAO {
                     Card card = new Card();
                     card.setCardId(rs.getInt("card_id"));
                     card.setCardName(rs.getString("card_name"));
-                    card.setCardType(CardType.values()[rs.getInt("tcg_id") - 1]);
+                    card.setCardType(GameType.fromId(rs.getInt("tcg_id"))); // collegamento GameType
                     cards.add(card);
                 }
             }

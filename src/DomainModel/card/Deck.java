@@ -1,5 +1,6 @@
 package DomainModel.card;
 
+import DomainModel.GameType;
 import DomainModel.user.User;
 
 import java.util.List;
@@ -9,6 +10,7 @@ public class Deck {
     private String deckName;
     private User owner;              // molti-a-uno
     private List<Card> cards;        // molti-a-molti
+    private GameType gameType;
 
     //COSTRUTTORI
     public Deck() {}
@@ -18,11 +20,12 @@ public class Deck {
         this.owner = owner;
     }
 
-    public Deck(int deckId, String deckName, User owner, List<Card> cards) {
+    public Deck(int deckId, String deckName, User owner, List<Card> cards, GameType gameType) {
         this.deckId = deckId;
         this.deckName = deckName;
         this.owner = owner;
         this.cards = cards;
+        this.gameType = gameType;
     }
 
     //GETTER
@@ -30,12 +33,14 @@ public class Deck {
     public String getDeckName() { return deckName; }
     public User getOwner() { return owner; }
     public List<Card> getCards() { return cards; }
+    public GameType getGameType() { return gameType; }
 
     //SETTER
     public void setDeckId(int deckId) { this.deckId = deckId; }
     public void setDeckName(String deckName) { this.deckName = deckName; }
     public void setOwner(User owner) { this.owner = owner; }
     public void setCards(List<Card> cards) { this.cards = cards; }
+    public void setGameType(GameType gameType) { this.gameType = gameType; }
 
 
     //Mostra testualmente il deck
@@ -72,7 +77,7 @@ public class Deck {
         return cards.size();
     }
 
-    // Verifica se il deck è valido: nome non nullo, owner non nullo, tutte le carte dello stesso tipo
+    /* Verifica se il deck è valido: nome non nullo, owner non nullo, tutte le carte dello stesso tipo
     public boolean isValid() {
         if (deckName == null || owner == null) {
             return false;
@@ -87,6 +92,7 @@ public class Deck {
         }
         return true;
     }
+    */
 
     //Sovrascrivo equals per confrontare i deck in base al loro ID
     @Override

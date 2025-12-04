@@ -1,6 +1,7 @@
 package DomainModel.tournament;
 import DomainModel.tournament.observer.TournamentSubject;
 import DomainModel.user.User;
+import DomainModel.GameType;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -15,6 +16,7 @@ public class Tournament extends TournamentSubject {
     private LocalDate startDate;
     private TournamentStatus status;
     private List<Registration> registrations;
+    private GameType gameType;
 
     // COSTRUTTORI
     public Tournament() {}
@@ -24,20 +26,23 @@ public class Tournament extends TournamentSubject {
         this.status = TournamentStatus.PENDING;
     }
 
+    public Tournament(String name, GameType gameType) {
+        this.tournamentName = name;
+        this.gameType = gameType;
+        this.status = TournamentStatus.PENDING;
+    }
+
     // GETTER
     public int getTournamentId() { return tournamentId; }
-    public String getName() {
-        return tournamentName;
-    }
+    public String getName() { return tournamentName; }
     public String getDescription() { return description; }
     public User getOrganizer() { return organizer; }
     public int getCapacity() { return capacity; }
     public LocalDate getDeadline() { return deadline; }
     public LocalDate getStartDate() { return startDate; }
-    public TournamentStatus getStatus() {
-        return status;
-    }
+    public TournamentStatus getStatus() { return status; }
     public List<Registration> getRegistrations() { return registrations; }
+    public GameType getGameType() { return gameType; }
 
 
     // SETTER
@@ -53,6 +58,8 @@ public class Tournament extends TournamentSubject {
         notifyObservers(this); // notifica tutti gli iscritti
     }
     public void setRegistrations(List<Registration> registrations) { this.registrations = registrations; }
+    public void setGameType(GameType gameType) { this.gameType = gameType; }
+
 
     // Registration handling
     public void addRegistration(Registration r) {

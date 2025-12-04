@@ -2,7 +2,6 @@ package BusinessLogic.card;
 
 import ORM.dao.CardDAO;
 import DomainModel.card.Card;
-import DomainModel.card.CardType;
 import DomainModel.user.Role;
 import DomainModel.user.User;
 import BusinessLogic.session.UserSession;

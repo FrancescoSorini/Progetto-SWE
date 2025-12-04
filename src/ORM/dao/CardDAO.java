@@ -1,12 +1,11 @@
 package ORM.dao;
 
-import ORM.connection.DatabaseConnection;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 import DomainModel.card.Card;
-import DomainModel.card.CardType;
+import DomainModel.GameType;
 
 
 public class CardDAO {
@@ -23,7 +22,7 @@ public class CardDAO {
         String sql = " INSERT INTO cards (card_name, tcg_id) VALUES (?, ?)";
         try(PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, card.getName());
-            stmt.setInt(2, card.getType().getId()); // collegamento a CardType
+            stmt.setInt(2, card.getType().getGameId()); // collegamento a GameType
             stmt.executeUpdate();
 
             try (ResultSet rs = stmt.getGeneratedKeys()) {
@@ -50,7 +49,7 @@ public class CardDAO {
                     Card card = new Card();
                     card.setCardId(rs.getInt("card_id"));
                     card.setCardName(rs.getString("card_name"));
-                    card.setCardType(CardType.values()[rs.getInt("tcg_id") -1]); // collegamento a CardType
+                    card.setCardType(GameType.fromId(rs.getInt("tcg_id"))); // collegamento a GameType
                     return card;
                 }
             }
@@ -74,7 +73,7 @@ public class CardDAO {
                     Card card = new Card();
                     card.setCardId(rs.getInt("card_id"));
                     card.setCardName(rs.getString("card_name"));
-                    card.setCardType(CardType.values()[rs.getInt("tcg_id") -1]); // collegamento a CardType
+                    card.setCardType(GameType.fromId(rs.getInt("tcg_id"))); // collegamento a GameType
                     return card;
                 }
             }
@@ -100,7 +99,7 @@ public class CardDAO {
                 Card card = new Card();
                 card.setCardId(rs.getInt("card_id"));
                 card.setCardName(rs.getString("card_name"));
-                card.setCardType(CardType.values()[rs.getInt("tcg_id")-1]); // collegamento a CardType
+                card.setCardType(GameType.fromId(rs.getInt("tcg_id"))); // collegamento a GameType
                 cards.add(card);
             }
         }
@@ -117,7 +116,7 @@ public class CardDAO {
             """;
         try(PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, card.getName());
-            stmt.setInt(2, card.getType().getId()); // collegamento a CardType
+            stmt.setInt(2, card.getType().getGameId()); // collegamento a GameType
             stmt.setInt(3, card.getCardId());
             stmt.executeUpdate();
         }

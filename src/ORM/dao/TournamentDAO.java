@@ -8,6 +8,7 @@ import ORM.connection.DatabaseConnection;
 
 import DomainModel.tournament.*;
 import DomainModel.user.User;
+import DomainModel.GameType;
 
 
 public class TournamentDAO {
@@ -25,8 +26,8 @@ public class TournamentDAO {
     // ====================================================================================
     public void createTournament(Tournament tournament) throws SQLException {
         String sql = """
-            INSERT INTO tournaments (tournament_name, description, organizer_id, capacity, deadline, start_date, status_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO tournaments (tournament_name, description, organizer_id, capacity, deadline, start_date, status_id, tcg_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """;
 
         try (PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -37,6 +38,7 @@ public class TournamentDAO {
             ps.setDate(5, Date.valueOf(tournament.getDeadline()));
             ps.setDate(6, Date.valueOf(tournament.getStartDate()));
             ps.setInt(7, mapStatusToId(tournament.getStatus()));
+            ps.setInt(8, tournament.getGameType().getGameId());
 
             ps.executeUpdate();
 
@@ -53,7 +55,7 @@ public class TournamentDAO {
     // ====================================================================================
     public Tournament getTournamentById(int tournamentId) throws SQLException {
         String sql = """
-            SELECT tournament_id, tournament_name, description, organizer_id, capacity, deadline, start_date, status_id
+            SELECT tournament_id, tournament_name, description, organizer_id, capacity, deadline, start_date, status_id, tcg_id
             FROM tournaments
             WHERE tournament_id = ?
         """;
@@ -63,7 +65,9 @@ public class TournamentDAO {
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    Tournament tournament = new Tournament(rs.getString("tournament_name"));
+                    Tournament tournament = new Tournament(rs.getString("tournament_name"),
+                                                            GameType.fromId(rs.getInt("tcg_id"))
+                    );
                     tournament.setTournamentId(rs.getInt("tournament_id"));
                     tournament.setDescription(rs.getString("description"));
 
@@ -93,7 +97,7 @@ public class TournamentDAO {
     // ====================================================================================
     public List<Tournament> getAllTournaments() throws SQLException {
         String sql = """
-            SELECT tournament_id, tournament_name, description, organizer_id, capacity, deadline, start_date, status_id
+            SELECT tournament_id, tournament_name, description, organizer_id, capacity, deadline, start_date, status_id, tcg_id
             FROM tournaments
         """;
 
@@ -103,7 +107,9 @@ public class TournamentDAO {
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
-                Tournament tournament = new Tournament(rs.getString("tournament_name"));
+                Tournament tournament = new Tournament(rs.getString("tournament_name"),
+                                                       GameType.fromId(rs.getInt("tcg_id")));
+
                 tournament.setTournamentId(rs.getInt("tournament_id"));
                 tournament.setDescription(rs.getString("description"));
 
@@ -132,7 +138,7 @@ public class TournamentDAO {
     public void updateTournament(Tournament tournament) throws SQLException {
         String sql = """
             UPDATE tournaments
-            SET tournament_name = ?, description = ?, organizer_id = ?, capacity = ?, deadline = ?, start_date = ?, status_id = ?
+            SET tournament_name = ?, description = ?, organizer_id = ?, capacity = ?, deadline = ?, start_date = ?, status_id = ?, tcg_id = ?
             WHERE tournament_id = ?
         """;
 
@@ -145,6 +151,7 @@ public class TournamentDAO {
             ps.setDate(6, Date.valueOf(tournament.getStartDate()));
             ps.setInt(7, mapStatusToId(tournament.getStatus()));
             ps.setInt(8, tournament.getTournamentId());
+            ps.setInt(9, tournament.getGameType().getGameId());
 
             ps.executeUpdate();
         }
