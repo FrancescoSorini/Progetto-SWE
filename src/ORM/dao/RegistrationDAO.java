@@ -32,7 +32,7 @@ public class RegistrationDAO {
             ps.setInt(1, registration.getTournament().getTournamentId());
             ps.setInt(2, registration.getUser().getUserId());
             ps.setTimestamp(3, Timestamp.valueOf(registration.getRegistrationDate()));
-            ps.setInt(4, registration.getRegDeckId());
+            ps.setInt(4, registration.getRegDeck().getDeckId());
             ps.executeUpdate();
         }
     }
@@ -60,7 +60,10 @@ public class RegistrationDAO {
                     User user = new User("");
                     user.setUserId(userId);
 
-                    Registration registration = new Registration(tournament, user, rs.getInt("reg_deck"));
+                    Deck deck = new Deck("", user);
+                    deck.setDeckId(rs.getInt("reg_deck"));
+
+                    Registration registration = new Registration(tournament, user, deck);
                     registration.setRegistrationDate(rs.getTimestamp("registration_date").toLocalDateTime());
                     return registration;
                 }
@@ -90,13 +93,16 @@ public class RegistrationDAO {
                     User user = new User("");
                     user.setUserId(userId);
 
+                    Deck deck = new Deck("", user);
+                    deck.setDeckId(rs.getInt("reg_deck"));
+
                     // Ottieni il torneo completo (senza ricaricare le registrazioni per evitare loop)
                     TournamentDAO tempDAO = new TournamentDAO(connection);
                     Tournament tournament = tempDAO.getTournamentById(rs.getInt("tournament_id"));
                     // Rimuovi le registrazioni dal torneo per evitare loop
                     tournament.setRegistrations(new ArrayList<>());
 
-                    Registration registration = new Registration(tournament, user, rs.getInt("reg_deck"));
+                    Registration registration = new Registration(tournament, user, deck);
                     registration.setRegistrationDate(rs.getTimestamp("registration_date").toLocalDateTime());
                     registrations.add(registration);
                 }
@@ -129,7 +135,16 @@ public class RegistrationDAO {
                     // Ottieni l'utente completo
                     User user = userDAO.getUserById(rs.getInt("user_id"));
 
-                    Registration registration = new Registration(tournament, user, rs.getInt("reg_deck"));
+                    /* equivalente a
+                    User u = new User("");
+                    u.setUserId(rs.getInt("user_id"));
+                    */
+
+                    Deck deck = new Deck("", user);
+                    deck.setDeckId(rs.getInt("reg_deck"));
+
+
+                    Registration registration = new Registration(tournament, user, deck);
                     registration.setRegistrationDate(rs.getTimestamp("registration_date").toLocalDateTime());
                     registrations.add(registration);
                 }
@@ -161,7 +176,10 @@ public class RegistrationDAO {
                 // Ottieni l'utente completo
                 User user = userDAO.getUserById(rs.getInt("user_id"));
 
-                Registration registration = new Registration(tournament, user, rs.getInt("reg_deck"));
+                Deck deck = new Deck("", user);
+                deck.setDeckId(rs.getInt("reg_deck"));
+
+                Registration registration = new Registration(tournament, user, deck);
                 registration.setRegistrationDate(rs.getTimestamp("registration_date").toLocalDateTime());
                 registrations.add(registration);
             }

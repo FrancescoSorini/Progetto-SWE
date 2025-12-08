@@ -3,8 +3,8 @@ package ORM.dao.test;
 import ORM.dao.*;
 import DomainModel.card.Card;
 import DomainModel.card.Deck;
-import DomainModel.user.Role;
-import DomainModel.user.User;
+import DomainModel.user.*;
+import DomainModel.GameType;
 import ORM.connection.DatabaseConnection;
 import org.junit.jupiter.api.*;
 
@@ -14,7 +14,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class TestDeckDAO {
+public class TestDeckDAO {
 
     private static Connection connection;
     private static DeckDAO deckDAO;
@@ -59,11 +59,11 @@ class TestDeckDAO {
         userId = u.getUserId();
 
         // Carte
-        Card c1 = new Card("Blue-Eyes White Dragon", CardType.YUGIOH);
+        Card c1 = new Card("Blue-Eyes White Dragon", GameType.YUGIOH);
         cardDAO.addCard(c1);
         cardId1 = c1.getCardId();
 
-        Card c2 = new Card("Dark Magician", CardType.YUGIOH);
+        Card c2 = new Card("Dark Magician", GameType.YUGIOH);
         cardDAO.addCard(c2);
         cardId2 = c2.getCardId();
     }
@@ -93,6 +93,7 @@ class TestDeckDAO {
 
         User owner = userDAO.getUserById(userId);
         Deck deck = new Deck("MyDeck", owner);
+        deck.setGameType(GameType.YUGIOH);
 
         deckDAO.createDeck(deck);
 
@@ -112,6 +113,7 @@ class TestDeckDAO {
 
         User owner = userDAO.getUserById(userId);
         Deck deck = new Deck("YugiDeck", owner);
+        deck.setGameType(GameType.YUGIOH);
 
         deckDAO.createDeck(deck);
 
@@ -125,15 +127,37 @@ class TestDeckDAO {
         assertEquals(2, loaded.getCards().size());
     }
 
-
     @Test
     @Order(3)
+    void testGetDecksByGameType() throws Exception {
+
+        User owner = userDAO.getUserById(userId);
+
+        Deck d1 = new Deck("YugiDeck1", owner);
+        d1.setGameType(GameType.YUGIOH);
+        Deck d2 = new Deck("YugiDeck2", owner);
+        d2.setGameType(GameType.YUGIOH);
+        deckDAO.createDeck(d1);
+        deckDAO.createDeck(d2);
+
+        deckDAO.addCardToDeck(d1.getDeckId(), cardId1);
+        deckDAO.addCardToDeck(d2.getDeckId(), cardId2);
+
+        List<Deck> yugiohDecks = deckDAO.getDecksByGameType(GameType.YUGIOH);
+
+        assertEquals(2, yugiohDecks.size());
+    }
+
+    @Test
+    @Order(4)
     void testGetAllDecksByUser() throws Exception {
 
         User owner = userDAO.getUserById(userId);
 
         Deck d1 = new Deck("Deck1", owner);
+        d1.setGameType(GameType.YUGIOH);
         Deck d2 = new Deck("Deck2", owner);
+        d2.setGameType(GameType.YUGIOH);
         deckDAO.createDeck(d1);
         deckDAO.createDeck(d2);
 
@@ -144,11 +168,12 @@ class TestDeckDAO {
 
 
     @Test
-    @Order(4)
+    @Order(5)
     void testUpdateDeckName() throws Exception {
 
         User owner = userDAO.getUserById(userId);
         Deck deck = new Deck("OldName", owner);
+        deck.setGameType(GameType.YUGIOH);
         deckDAO.createDeck(deck);
 
         deckDAO.updateDeckName(deck.getDeckId(), "NewName");
@@ -160,11 +185,12 @@ class TestDeckDAO {
 
 
     @Test
-    @Order(5)
+    @Order(6)
     void testAddCardToDeck() throws Exception {
 
         User owner = userDAO.getUserById(userId);
         Deck deck = new Deck("CardTestDeck", owner);
+        deck.setGameType(GameType.YUGIOH);
 
         deckDAO.createDeck(deck);
         deckDAO.addCardToDeck(deck.getDeckId(), cardId1);
@@ -177,11 +203,12 @@ class TestDeckDAO {
 
 
     @Test
-    @Order(6)
+    @Order(7)
     void testRemoveCardFromDeck() throws Exception {
 
         User owner = userDAO.getUserById(userId);
         Deck deck = new Deck("RemoveTestDeck", owner);
+        deck.setGameType(GameType.YUGIOH);
 
         deckDAO.createDeck(deck);
         deckDAO.addCardToDeck(deck.getDeckId(), cardId1);
@@ -195,11 +222,12 @@ class TestDeckDAO {
 
 
     @Test
-    @Order(7)
+    @Order(8)
     void testDeleteDeck() throws Exception {
 
         User owner = userDAO.getUserById(userId);
         Deck deck = new Deck("TempDeck", owner);
+        deck.setGameType(GameType.YUGIOH);
 
         deckDAO.createDeck(deck);
         deckDAO.addCardToDeck(deck.getDeckId(), cardId1);

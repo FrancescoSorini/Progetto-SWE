@@ -50,7 +50,7 @@ public class RegistrationService {
     // ====================================================================================
     // BUSINESS LOGIC VALIDATION
     // ====================================================================================
-    private void validateRegistrationRules(Tournament t, User u) throws SQLException {
+    private void validateRegistrationRules(Tournament t, User u, Registration r) throws SQLException {
 
         if (t.getStatus() != TournamentStatus.APPROVED)
             throw new IllegalStateException("Tournament is not open for registration.");
@@ -63,12 +63,33 @@ public class RegistrationService {
 
         if (!t.isRegistrationOpen())
             throw new IllegalStateException("Registration deadline has passed.");
+
+        if(r.getRegDeck().getGameType() != t.getGameType())
+            throw new IllegalArgumentException("Deck game type does not match tournament game type.");
+
+        /*
+        (Registration r)
+
+        Tournament t = r.getTournament();
+        Deck d = r.getRegDeck();
+
+        Obiettivo: deck.gametype == tournament.gametype
+            main
+            selezioni torneo
+            registrati
+            funzione che ritorna tutti i deck con lo stesso game type del torneo
+            selezioni deck quindi fai una cosa tipo
+            registration r = new Registration(t, u = current.user(), d)
+            registrationService.registerUserToTournament(t.getTournamentId(), r)
+
+        */
+
     }
 
     // ====================================================================================
     // 1) REGISTER USER TO TOURNAMENT (PLAYER)
     // ====================================================================================
-    public void registerUserToTournament(int tournamentId) throws SQLException {
+    public void registerUserToTournament(int tournamentId, Registration reg) throws SQLException {
         checkPlayerPermission();
         User user = currentUser();
 
@@ -76,12 +97,12 @@ public class RegistrationService {
         if (tournament == null)
             throw new IllegalArgumentException("Tournament not found");
 
-        validateRegistrationRules(tournament, user);
+        validateRegistrationRules(tournament, user, reg);
 
-        Registration registration = new Registration(tournament, user);
-        registration.setRegistrationDate(LocalDateTime.now());
+        //Registration registration = new Registration(tournament, user);
+        reg.setRegistrationDate(LocalDateTime.now());
 
-        registrationDAO.createRegistration(registration);
+        registrationDAO.createRegistration(reg);
     }
     // ====================================================================================
     // 2) CANCEL REGISTRATION

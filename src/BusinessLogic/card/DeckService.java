@@ -129,6 +129,10 @@ public class DeckService {
             throw new SecurityException("Non hai permessi per modificare questo deck.");
         }
 
+        if (card.getType() != deck.getGameType()) {
+            throw new IllegalArgumentException("La carta non è compatibile con il tipo di gioco del deck.");
+        }
+
         deckDAO.addCardToDeck(deckId, cardId);
     }
 

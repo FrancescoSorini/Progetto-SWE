@@ -43,6 +43,10 @@ public class TestCardDAO {
         }
     }
 
+    /*
+    Pulisco il DB dopo aver svolto tutti i test
+    */
+
     @Test
     @Order(1)
     void testInsertCard() throws SQLException {
@@ -70,17 +74,24 @@ public class TestCardDAO {
         assertEquals(1, cardDAO.getCardByName("Blue-Eyes White Dragon").getCardId());
     }
 
+    @Test
+    @Order(4)
+    void testGetCardsByGameType() throws SQLException {
+        List<Card> yugiohCards = cardDAO.getCardsByGameType(GameType.YUGIOH);
+        assertTrue(yugiohCards.size() > 0, "Dovrebbe esserci almeno una carta di Yu-Gi-Oh!");
+    }
+
 
 
     @Test
-    @Order(4)
+    @Order(5)
     void testGetAllCards() throws SQLException {
         List<Card> cards = cardDAO.getAllCards();
         assertTrue(cards.size() > 0, "Il database dovrebbe contenere almeno una carta");
     }
 
     @Test
-    @Order(5)
+    @Order(6)
     void testUpdateCard() throws SQLException {
         Card card = cardDAO.getCardByName("Blue-Eyes White Dragon");
         card.setCardName("Blue-Eyes Ultimate Dragon");
@@ -94,7 +105,7 @@ public class TestCardDAO {
 
     /*
     @Test
-    @Order(6)
+    @Order(7)
     void testDeleteCard() throws SQLException {
         Card card = cardDAO.getCardByName("Blue-Eyes Ultimate Dragon");
         cardDAO.deleteCard(card.getCardId());

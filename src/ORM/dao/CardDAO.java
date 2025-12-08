@@ -82,7 +82,34 @@ public class CardDAO {
     }
 
     // ====================================================================================
-    // 4) READ all
+    // 4) READ by GameType
+    // ====================================================================================
+    public List<Card> getCardsByGameType(GameType gameType) throws SQLException {
+        List<Card> cards = new ArrayList<>();
+
+        String sql = """
+            SELECT card_id, card_name, tcg_id 
+            FROM cards 
+            WHERE tcg_id = ?
+            """;
+        try(PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, gameType.getGameId()); // collegamento a GameType
+            try(ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Card card = new Card();
+                    card.setCardId(rs.getInt("card_id"));
+                    card.setCardName(rs.getString("card_name"));
+                    card.setCardType(GameType.fromId(rs.getInt("tcg_id"))); // collegamento a GameType
+                    cards.add(card);
+                }
+            }
+        }
+        return cards;
+    }
+
+
+    // ====================================================================================
+    // 5) READ all
     // ====================================================================================
     public List<Card> getAllCards() throws SQLException {
         List<Card> cards = new ArrayList<>();
@@ -107,7 +134,7 @@ public class CardDAO {
     }
 
     // ====================================================================================
-    // 5) UPDATE
+    // 6) UPDATE
     // ====================================================================================
     public void updateCard(Card card) throws SQLException {
         String sql = """
@@ -123,7 +150,7 @@ public class CardDAO {
     }
 
     // ====================================================================================
-    // 6) DELETE
+    // 7) DELETE
     // ====================================================================================
     public void deleteCard(int id) throws SQLException {
         String sql = """

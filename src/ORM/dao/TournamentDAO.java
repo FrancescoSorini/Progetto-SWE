@@ -93,7 +93,50 @@ public class TournamentDAO {
     }
 
     // ====================================================================================
-    // 3) READ ALL TOURNAMENTS
+    // 3) READ by GameType
+    // ====================================================================================
+    public List<Tournament> getTournamentsByGameType(GameType gameType) throws SQLException {
+        String sql = """
+            SELECT tournament_id, tournament_name, description, organizer_id, capacity, deadline, start_date, status_id, tcg_id
+            FROM tournaments
+            WHERE tcg_id = ?
+        """;
+
+        List<Tournament> tournaments = new ArrayList<>();
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, gameType.getGameId());
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Tournament tournament = new Tournament(rs.getString("tournament_name"),
+                                                           GameType.fromId(rs.getInt("tcg_id"))
+                    );
+                    tournament.setTournamentId(rs.getInt("tournament_id"));
+                    tournament.setDescription(rs.getString("description"));
+
+                    User organizer = userDAO.getUserById(rs.getInt("organizer_id"));
+                    tournament.setOrganizer(organizer);
+
+                    tournament.setCapacity(rs.getInt("capacity"));
+                    tournament.setDeadline(rs.getDate("deadline").toLocalDate());
+                    tournament.setStartDate(rs.getDate("start_date").toLocalDate());
+                    tournament.setStatus(mapIdToStatus(rs.getInt("status_id")));
+
+                    // Load registrations
+                    RegistrationDAO tempDAO = new RegistrationDAO(connection);
+                    List<Registration> registrations = tempDAO.getRegistrationsByTournament(rs.getInt("tournament_id"));
+                    tournament.setRegistrations(registrations);
+
+                    tournaments.add(tournament);
+                }
+            }
+        }
+        return tournaments;
+    }
+
+    // ====================================================================================
+    // 4) READ ALL TOURNAMENTS
     // ====================================================================================
     public List<Tournament> getAllTournaments() throws SQLException {
         String sql = """
@@ -133,7 +176,7 @@ public class TournamentDAO {
     }
 
     // ====================================================================================
-    // 4) UPDATE TOURNAMENT
+    // 5) UPDATE TOURNAMENT
     // ====================================================================================
     public void updateTournament(Tournament tournament) throws SQLException {
         String sql = """
@@ -158,7 +201,7 @@ public class TournamentDAO {
     }
 
     // ====================================================================================
-    // 5) DELETE TOURNAMENT
+    // 6) DELETE TOURNAMENT
     // ====================================================================================
     public void deleteTournament(int tournamentId) throws SQLException {
         // Prima elimina tutte le registrazioni correlate per evitare violazioni FK

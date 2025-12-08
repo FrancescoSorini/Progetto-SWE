@@ -2,8 +2,8 @@ package BusinessLogic.card;
 
 import ORM.dao.CardDAO;
 import DomainModel.card.Card;
-import DomainModel.user.Role;
-import DomainModel.user.User;
+import DomainModel.user.*;
+import DomainModel.GameType;
 import BusinessLogic.session.UserSession;
 
 import java.sql.Connection;
@@ -97,7 +97,7 @@ public class CardService {
     // ====================================================================================
     // 7. UPDATE CARD TYPE (Admin)
     // ====================================================================================
-    public void updateCardType(int cardId, CardType newType) throws SQLException {
+    public void updateCardType(int cardId, GameType newType) throws SQLException {
         checkAdminPermission();
 
         if (newType == null) {
@@ -125,7 +125,7 @@ public class CardService {
     }
 
     // ====================================================================================
-    // 9. BUSINESS LOGIC: VALIDAZIONE
+    // 9. UTILITIES: VALIDAZIONE
     // ====================================================================================
     private void validateCard(Card card) {
         if (card.getName() == null || card.getName().isBlank()) {
@@ -137,7 +137,7 @@ public class CardService {
     }
 
     // ====================================================================================
-    // 10. BUSINESS LOGIC: DUPLICATI
+    // 10. UTILITIES: DUPLICATI
     // ====================================================================================
     public boolean isDuplicate(String name) throws SQLException {
         Card existing = cardDAO.getCardByName(name);

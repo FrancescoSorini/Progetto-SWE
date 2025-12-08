@@ -4,6 +4,7 @@ import ORM.connection.DatabaseConnection;
 import ORM.dao.*;
 import DomainModel.tournament.*;
 import DomainModel.user.*;
+import DomainModel.GameType;
 import org.junit.jupiter.api.*;
 
 import java.sql.*;
@@ -69,6 +70,7 @@ public class TestTournamentDAO {
         tournament.setDeadline(LocalDate.now().plusDays(5));
         tournament.setStartDate(LocalDate.now().plusDays(10));
         tournament.setStatus(TournamentStatus.PENDING);
+        tournament.setGameType(GameType.YUGIOH);
 
         tournamentDAO.createTournament(tournament);
 
@@ -90,6 +92,7 @@ public class TestTournamentDAO {
         tournament.setDeadline(LocalDate.now().plusDays(3));
         tournament.setStartDate(LocalDate.now().plusDays(7));
         tournament.setStatus(TournamentStatus.APPROVED);
+        tournament.setGameType(GameType.YUGIOH);
 
         tournamentDAO.createTournament(tournament);
 
@@ -103,6 +106,42 @@ public class TestTournamentDAO {
 
     @Test
     @Order(3)
+    void testGetTournamentsByGameType() throws Exception {
+        User organizer = userDAO.getUserById(organizerId);
+
+        Tournament t1 = new Tournament("MTG Tourney", GameType.MAGIC);
+        t1.setDescription("Magic Tournament");
+        t1.setOrganizer(organizer);
+        t1.setCapacity(16);
+        t1.setDeadline(LocalDate.now().plusDays(4));
+        t1.setStartDate(LocalDate.now().plusDays(8));
+        t1.setStatus(TournamentStatus.READY);
+
+
+        tournamentDAO.createTournament(t1);
+
+        Tournament t2 = new Tournament("Pokemon Tourney", GameType.POKEMON);
+        t2.setDescription("Pokemon Tournament");
+        t2.setOrganizer(organizer);
+        t2.setCapacity(16);
+        t2.setDeadline(LocalDate.now().plusDays(6));
+        t2.setStartDate(LocalDate.now().plusDays(12));
+        t2.setStatus(TournamentStatus.READY);
+
+        tournamentDAO.createTournament(t2);
+
+        List<Tournament> mtgTournaments = tournamentDAO.getTournamentsByGameType(GameType.MAGIC);
+        assertEquals(1, mtgTournaments.size());
+        assertEquals("MTG Tourney", mtgTournaments.get(0).getName());
+
+        List<Tournament> pokemonTournaments = tournamentDAO.getTournamentsByGameType(GameType.POKEMON);
+        assertEquals(1, pokemonTournaments.size());
+        assertEquals("Pokemon Tourney", pokemonTournaments.get(0).getName());
+    }
+
+
+    @Test
+    @Order(4)
     void testGetAllTournaments() throws Exception {
         User organizer = userDAO.getUserById(organizerId);
 
@@ -113,6 +152,7 @@ public class TestTournamentDAO {
         t1.setDeadline(LocalDate.now().plusDays(1));
         t1.setStartDate(LocalDate.now().plusDays(2));
         t1.setStatus(TournamentStatus.READY);
+        t1.setGameType(GameType.YUGIOH);
 
         tournamentDAO.createTournament(t1);
 
@@ -123,6 +163,7 @@ public class TestTournamentDAO {
         t2.setDeadline(LocalDate.now().plusDays(10));
         t2.setStartDate(LocalDate.now().plusDays(15));
         t2.setStatus(TournamentStatus.CLOSED);
+        t2.setGameType(GameType.YUGIOH);
 
         tournamentDAO.createTournament(t2);
 
@@ -131,7 +172,7 @@ public class TestTournamentDAO {
     }
 
     @Test
-    @Order(4)
+    @Order(5)
     void testUpdateTournament() throws Exception {
         User organizer = userDAO.getUserById(organizerId);
         Tournament tournament = new Tournament("Update Test");
@@ -141,6 +182,7 @@ public class TestTournamentDAO {
         tournament.setDeadline(LocalDate.now().plusDays(5));
         tournament.setStartDate(LocalDate.now().plusDays(10));
         tournament.setStatus(TournamentStatus.PENDING);
+        tournament.setGameType(GameType.YUGIOH);
 
         tournamentDAO.createTournament(tournament);
 
@@ -148,6 +190,7 @@ public class TestTournamentDAO {
         tournament.setDescription("New Desc");
         tournament.setCapacity(20);
         tournament.setStatus(TournamentStatus.APPROVED);
+        tournament.setGameType(GameType.MAGIC);
 
         tournamentDAO.updateTournament(tournament);
 
@@ -156,10 +199,11 @@ public class TestTournamentDAO {
         assertEquals("New Desc", updated.getDescription());
         assertEquals(20, updated.getCapacity());
         assertEquals(TournamentStatus.APPROVED, updated.getStatus());
+        assertEquals(GameType.MAGIC, updated.getGameType());
     }
 
     @Test
-    @Order(5)
+    @Order(6)
     void testDeleteTournament() throws Exception {
         User organizer = userDAO.getUserById(organizerId);
         Tournament tournament = new Tournament("Delete Test");
@@ -169,6 +213,7 @@ public class TestTournamentDAO {
         tournament.setDeadline(LocalDate.now().plusDays(3));
         tournament.setStartDate(LocalDate.now().plusDays(7));
         tournament.setStatus(TournamentStatus.REJECTED);
+        tournament.setGameType(GameType.YUGIOH);
 
         tournamentDAO.createTournament(tournament);
 

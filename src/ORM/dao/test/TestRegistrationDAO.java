@@ -1,10 +1,13 @@
 package ORM.dao.test;
 
+import DomainModel.GameType;
 import ORM.connection.DatabaseConnection;
 import ORM.dao.*;
 
 import DomainModel.tournament.*;
 import DomainModel.user.*;
+import DomainModel.card.Deck;
+import ORM.dao.DeckDAO;
 
 import org.junit.jupiter.api.*;
 
@@ -23,9 +26,11 @@ public class TestRegistrationDAO {
     private RegistrationDAO registrationDAO;
     private UserDAO userDAO;
     private TournamentDAO tournamentDAO;
+    private DeckDAO deckDAO;
 
     private int userId;
     private int tournamentId;
+    private Deck deck;
 
     @BeforeAll
     static void init() throws Exception {
@@ -48,13 +53,18 @@ public class TestRegistrationDAO {
         registrationDAO = new RegistrationDAO(connection);
         userDAO = new UserDAO(connection);
         tournamentDAO = new TournamentDAO(connection);
-
+        deckDAO = new DeckDAO(connection);
 
         // Creazione utente Player
         User user = new User("testUser", "test@mail.com", "pwd123", true, Role.PLAYER);
         userDAO.createUser(user);
         userId = user.getUserId();
 
+        // Creazione deck per l'utente
+        Deck deck = new Deck("Test Deck", user);
+        deck.setGameType(GameType.POKEMON);
+        deckDAO.createDeck(deck);
+        this.deck = deckDAO.getDeckById(deck.getDeckId());
 
         // Creazione torneo
         Tournament tournament = new Tournament("Test Tournament");
@@ -64,6 +74,7 @@ public class TestRegistrationDAO {
         tournament.setDeadline(LocalDate.now().plusDays(5));
         tournament.setStartDate(LocalDate.now().plusDays(10));
         tournament.setStatus(TournamentStatus.APPROVED);  // enum valido
+        tournament.setGameType(GameType.POKEMON);
 
         tournamentDAO.createTournament(tournament);
         tournamentId = tournament.getTournamentId();
@@ -88,7 +99,7 @@ public class TestRegistrationDAO {
         User user = userDAO.getUserById(userId);
         Tournament tournament = tournamentDAO.getTournamentById(tournamentId);
 
-        Registration reg = new Registration(tournament, user);
+        Registration reg = new Registration(tournament, user, deck);
         reg.setRegistrationDate(LocalDateTime.now());
 
         registrationDAO.createRegistration(reg);
@@ -104,7 +115,7 @@ public class TestRegistrationDAO {
         User user = userDAO.getUserById(userId);
         Tournament tournament = tournamentDAO.getTournamentById(tournamentId);
 
-        Registration reg = new Registration(tournament, user);
+        Registration reg = new Registration(tournament, user, deck);
         reg.setRegistrationDate(LocalDateTime.now());
         registrationDAO.createRegistration(reg);
 
@@ -122,7 +133,7 @@ public class TestRegistrationDAO {
         User user = userDAO.getUserById(userId);
         Tournament tournament = tournamentDAO.getTournamentById(tournamentId);
 
-        Registration reg = new Registration(tournament, user);
+        Registration reg = new Registration(tournament, user, deck);
         reg.setRegistrationDate(LocalDateTime.now());
 
         registrationDAO.createRegistration(reg);
@@ -138,7 +149,7 @@ public class TestRegistrationDAO {
         User user = userDAO.getUserById(userId);
         Tournament tournament = tournamentDAO.getTournamentById(tournamentId);
 
-        Registration reg = new Registration(tournament, user);
+        Registration reg = new Registration(tournament, user, deck);
         reg.setRegistrationDate(LocalDateTime.now());
 
         registrationDAO.createRegistration(reg);
@@ -156,7 +167,7 @@ public class TestRegistrationDAO {
         User user = userDAO.getUserById(userId);
         Tournament tournament = tournamentDAO.getTournamentById(tournamentId);
 
-        Registration reg = new Registration(tournament, user);
+        Registration reg = new Registration(tournament, user, deck);
         reg.setRegistrationDate(LocalDateTime.now());
 
         registrationDAO.createRegistration(reg);
@@ -173,7 +184,7 @@ public class TestRegistrationDAO {
         User user = userDAO.getUserById(userId);
         Tournament tournament = tournamentDAO.getTournamentById(tournamentId);
 
-        Registration reg = new Registration(tournament, user);
+        Registration reg = new Registration(tournament, user, deck);
         reg.setRegistrationDate(LocalDateTime.now());
 
         registrationDAO.createRegistration(reg);
@@ -190,7 +201,7 @@ public class TestRegistrationDAO {
         User user = userDAO.getUserById(userId);
         Tournament tournament = tournamentDAO.getTournamentById(tournamentId);
 
-        Registration reg = new Registration(tournament, user);
+        Registration reg = new Registration(tournament, user, deck);
         reg.setRegistrationDate(LocalDateTime.now());
 
         registrationDAO.createRegistration(reg);
