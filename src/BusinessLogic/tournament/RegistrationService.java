@@ -66,24 +66,6 @@ public class RegistrationService {
 
         if(r.getRegDeck().getGameType() != t.getGameType())
             throw new IllegalArgumentException("Deck game type does not match tournament game type.");
-
-        /*
-        (Registration r)
-
-        Tournament t = r.getTournament();
-        Deck d = r.getRegDeck();
-
-        Obiettivo: deck.gametype == tournament.gametype
-            main
-            selezioni torneo
-            registrati
-            funzione che ritorna tutti i deck con lo stesso game type del torneo
-            selezioni deck quindi fai una cosa tipo
-            registration r = new Registration(t, u = current.user(), d)
-            registrationService.registerUserToTournament(t.getTournamentId(), r)
-
-        */
-
     }
 
     // ====================================================================================

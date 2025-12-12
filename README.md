@@ -1,22 +1,23 @@
 # Progetto-SWE
 
-Dopo le varie modifiche al progetto, faccio commit con l'interfaccia di IntelliJ e poi
-Opzione 1: faccio da terminale
-            git push origin main
-per caricare le modifiche sul repo GitHub
-oppure
-Opzione 2: uso l'interfaccia di IntelliJ per fare il Commit and Push sul repo GitHub collegando
-            l'account GitHub ad IntelliJ
+Abbiamo strutturato il progetto in Domain Model, DAO e Business Logic (ancora in fase di sviluppo).
+## Domain Model
+Il Domain Model rappresenta le entità principali del sistema, come 
+Utente, Carta, Deck, Torneo, Registrazione e GameType. Ogni entità è definita in una classe separata all'interno della cartella `domain_model`.
+Per l'oggetto carta abbiamo usato il design pattern Factory Method per creare diverse tipologie di carte in modo flessibile.
+Per il torneo abbiamo implementato il design pattern Observer per notificare gli utenti iscritti sugli aggiornamenti del torneo.
 
-# TODO: Aggiornare Schema ER e documentazione DB per riflettere il nuovo attributo (relazione rombo con cards_type)
+## DAO
+La cartella `dao` contiene le classi responsabili dell'accesso ai dati.
+Abbiamo collegato il progetto ad un database PostgreSQL usando pgAdmin4.
+Ogni classe DAO fornisce metodi per eseguire operazioni CRUD (Create, Read, Update, Delete) sulle entità del Domain Model.
+Abbiamo poi fatto dei test per verificare il corretto funzionamento delle operazioni di accesso ai dati utilizando JUnit.
 
-# TODO: Controlla i vari costruttori e le loro chiamate nei DAO / Test / Business Logic
-
-# TODO: Controllare se nei DAO è necessario usare altri DAO per le info complete su oggetti relativi o basta istanziarne dei nuovi con valori da settare
-
-# TODO: Controllare con Kilo Code le modifiche fatte per GameType e Registrations
-Verificare con Kilo Code che le modifiche apportate alla gestione del tipo di gioco (GameType) e alle registrazioni (Registrations) 
-siano corrette e funzionino come previsto. In particolare controllare se la logica dell'aggiunta dell'id del mazzo alla registrazione 
-è stata implementata correttamente e se è anche corretta logicamente.
-
-# TODO: Rifare i test del DAO
+## Business Logic
+La cartella `business_logic` è destinata a contenere la logica di business del sistema.
+Si effettuano i vari controlli per interagire con gli oggetti del Domain Model e le operazioni sui dati tramite le classi DAO.
+Ad esempio, le regole per la registrazione ai tornei, la gestione dei deck e l'autenticazione degli utenti saranno implementate qui.
+Abbiamo preferito creare una classe apposita per gestire la sessione di un utente autenticato, 
+in modo da mantenere traccia dello stato dell'utente e delle sue caratteristiche (se è Admin, Organizer o Player)
+durante l'interazione con il sistema.
+Ci manca ancora da fare i test di questa parte (sempre con JUnit).
