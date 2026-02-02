@@ -1,5 +1,6 @@
 package BusinessLogic.card;
 
+import DomainModel.GameType;
 import DomainModel.card.*;
 import DomainModel.user.*;
 import BusinessLogic.session.UserSession;
@@ -37,7 +38,7 @@ public class DeckService {
 
         User current = UserSession.getCurrentUser();
 
-        Deck deck = new Deck(deckName, current);
+        Deck deck = new Deck(deckName, current, GameType.MAGIC);
 
         deckDAO.createDeck(deck);
         return deck;

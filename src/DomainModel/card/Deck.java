@@ -3,6 +3,7 @@ package DomainModel.card;
 import DomainModel.GameType;
 import DomainModel.user.User;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Deck {
@@ -19,6 +20,14 @@ public class Deck {
         this.deckName = deckName;
         this.owner = owner;
     }
+
+    public Deck(String deckName, User owner, GameType gameType) {
+        this.deckName = deckName;
+        this.owner = owner;
+        this.gameType = gameType;
+        this.cards = new ArrayList<>();
+    }
+
 
     public Deck(int deckId, String deckName, User owner, List<Card> cards, GameType gameType) {
         this.deckId = deckId;
