@@ -1,6 +1,6 @@
 # Progetto-SWE
 
-Abbiamo strutturato il progetto in Domain Model, DAO e Business Logic (ancora in fase di sviluppo).
+Abbiamo strutturato il progetto in Domain Model, DAO e Business Logic.
 ## Domain Model
 Il Domain Model rappresenta le entità principali del sistema, come 
 Utente, Carta, Deck, Torneo, Registrazione e GameType. Ogni entità è definita in una classe separata all'interno della cartella `domain_model`.

@@ -56,10 +56,10 @@ public class UserService {
             return null;
         }
 
-        // 3) Confronto credenziali
-        if (!user.getPassword().equals(password) || user.isEnabled()) {
-            return null;
-        }
+        // 3) Confronto credenziali FIX PER TEST
+        if (!user.isEnabled()) return null;
+        if (!user.getPassword().equals(password)) return null;
+
 
         // 4) Login riuscito
         return user;
@@ -73,9 +73,11 @@ public class UserService {
         if (newUsername == null || newUsername.isBlank())
             throw new IllegalArgumentException("Nuovo username non valido");
 
-        // Controlla se esiste già
-        if (userDAO.getUserByUsername(newUsername) != null)
+        // Controlla se esiste già FIXATO PER TEST
+        User existing = userDAO.getUserByUsername(newUsername);
+        if (existing != null && existing.getUserId() != userId)
             throw new IllegalStateException("Username già in uso");
+
 
         userDAO.updateUsername(userId, newUsername);
     }
