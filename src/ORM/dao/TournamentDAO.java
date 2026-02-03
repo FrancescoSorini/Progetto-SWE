@@ -193,8 +193,8 @@ public class TournamentDAO {
             ps.setDate(5, Date.valueOf(tournament.getDeadline()));
             ps.setDate(6, Date.valueOf(tournament.getStartDate()));
             ps.setInt(7, mapStatusToId(tournament.getStatus()));
-            ps.setInt(8, tournament.getTournamentId());
-            ps.setInt(9, tournament.getGameType().getGameId());
+            ps.setInt(8, tournament.getGameType().getGameId());
+            ps.setInt(9, tournament.getTournamentId());
 
             ps.executeUpdate();
         }
