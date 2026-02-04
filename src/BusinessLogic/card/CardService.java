@@ -6,6 +6,11 @@ import DomainModel.user.*;
 import DomainModel.GameType;
 import BusinessLogic.session.UserSession;
 
+import DomainModel.card.factory.CardFactory;
+import DomainModel.card.factory.MagicCardFactory;
+import DomainModel.card.factory.PokemonCardFactory;
+import DomainModel.card.factory.YuGiOhCardFactory;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
@@ -32,17 +37,51 @@ public class CardService {
     }
 
     // ====================================================================================
-    // 1. CREATE CARD (Admin only)
+    // 1. CREATE CARD (Admin only) - via Factory
     // ====================================================================================
     public void createCard(Card card) throws SQLException {
-        checkAdminPermission();
-        validateCard(card);
+        if (card == null) {
+            throw new IllegalArgumentException("Card cannot be null.");
+        }
+        createCard(card.getName(), card.getType());
+    }
 
-        if (isDuplicate(card.getName())) {
+    public void createCard(String name, GameType type) throws SQLException {
+        checkAdminPermission();
+
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("Card name cannot be empty.");
+        }
+        if (type == null) {
+            throw new IllegalArgumentException("Card type must be provided.");
+        }
+
+        if (isDuplicate(name)) {
             throw new IllegalArgumentException("A card with this name already exists.");
         }
 
+        Card card = createCardViaFactory(name, type);
+        validateCard(card);
+
         cardDAO.addCard(card);
+    }
+
+    private Card createCardViaFactory(String name, GameType type) {
+        CardFactory factory;
+        switch (type) {
+            case MAGIC:
+                factory = new MagicCardFactory();
+                break;
+            case POKEMON:
+                factory = new PokemonCardFactory();
+                break;
+            case YUGIOH:
+                factory = new YuGiOhCardFactory();
+                break;
+            default:
+                throw new IllegalArgumentException("Unsupported game type: " + type);
+        }
+        return factory.createCard(name);
     }
 
     // ====================================================================================

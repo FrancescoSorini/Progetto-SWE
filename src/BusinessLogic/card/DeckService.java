@@ -7,6 +7,11 @@ import BusinessLogic.session.UserSession;
 import ORM.dao.CardDAO;
 import ORM.dao.DeckDAO;
 
+import DomainModel.card.factory.CardFactory;
+import DomainModel.card.factory.MagicCardFactory;
+import DomainModel.card.factory.PokemonCardFactory;
+import DomainModel.card.factory.YuGiOhCardFactory;
+
 import java.util.List;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -29,23 +34,31 @@ public class DeckService {
     // -------------------------------------------------------------
 
     /**
-     * Crea un nuovo deck per l’utente loggato.
+     * Crea un nuovo deck per lâ€™utente loggato.
      */
-    public Deck createDeck(String deckName) throws SQLException {
+    public Deck createDeck(String deckName, GameType gameType) throws SQLException {
         if (!UserSession.isLoggedIn()) {
             throw new SecurityException("Devi essere loggato per creare un deck.");
         }
 
+        if (deckName == null || deckName.isBlank()) {
+            throw new IllegalArgumentException("Il nome del deck non può essere vuoto.");
+        }
+
+        if (gameType == null) {
+            throw new IllegalArgumentException("Il tipo di gioco non può essere nullo.");
+        }
+
         User current = UserSession.getCurrentUser();
 
-        Deck deck = new Deck(deckName, current, GameType.MAGIC);
+        Deck deck = new Deck(deckName, current, gameType);
 
         deckDAO.createDeck(deck);
         return deck;
     }
 
     /**
-     * Restituisce tutti i deck dell’utente loggato.
+     * Restituisce tutti i deck dellâ€™utente loggato.
      */
     public List<Deck> getMyDecks() throws SQLException {
         if (!UserSession.isLoggedIn()) {
@@ -79,18 +92,18 @@ public class DeckService {
 
 
         if(newName == null || newName.isBlank()) {
-            throw new IllegalArgumentException("Il nome del deck non può essere vuoto.");
+            throw new IllegalArgumentException("Il nome del deck non puÃ² essere vuoto.");
         }
 
         if(newName.equals(deck.getDeckName())) {
             throw new IllegalArgumentException("Il nuovo nome del deck deve essere diverso da quello attuale.");
         }
 
-        // Controlla che il nuovo nome non sia già usato dallo stesso utente per un altro deck
+        // Controlla che il nuovo nome non sia giÃ  usato dallo stesso utente per un altro deck
         List<Deck> userDecks = deckDAO.getAllDecksByUser(deck.getOwner().getUserId());
         for(Deck d : userDecks) {
             if(d.getDeckName().equals(newName) && d.getDeckId() != deckId) {
-                throw new IllegalArgumentException("Hai già un deck con questo nome.");
+                throw new IllegalArgumentException("Hai giÃ  un deck con questo nome.");
             }
         }
 
@@ -116,25 +129,49 @@ public class DeckService {
     // -------------------------------------------------------------
 
     /**
-     * Aggiunge una carta al deck (solo owner).
+     * Aggiunge una carta al deck creando/riusando la carta via Factory (solo owner).
      */
-    public void addCardToDeck(int deckId, int cardId) throws SQLException {
+    public void addCardToDeck(int deckId, String cardName) throws SQLException {
         Deck deck = getDeckById(deckId);
-        Card card = cardDAO.getCardById(cardId);
-
-        if (card == null) {
-            throw new IllegalArgumentException("Carta inesistente");
-        }
 
         if (!isOwner(deck.getOwner().getUserId())) {
             throw new SecurityException("Non hai permessi per modificare questo deck.");
         }
 
-        if (card.getType() != deck.getGameType()) {
-            throw new IllegalArgumentException("La carta non è compatibile con il tipo di gioco del deck.");
+        if (cardName == null || cardName.isBlank()) {
+            throw new IllegalArgumentException("Il nome della carta non puÃ² essere vuoto.");
         }
 
-        deckDAO.addCardToDeck(deckId, cardId);
+        Card existing = cardDAO.getCardByName(cardName);
+        if (existing != null) {
+            if (existing.getType() != deck.getGameType()) {
+                throw new IllegalArgumentException("La carta non Ã¨ compatibile con il tipo di gioco del deck.");
+            }
+            deckDAO.addCardToDeck(deckId, existing.getCardId());
+            return;
+        }
+
+        Card card = createCardViaFactory(cardName, deck.getGameType());
+        cardDAO.addCard(card);
+        deckDAO.addCardToDeck(deckId, card.getCardId());
+    }
+
+    private Card createCardViaFactory(String name, GameType type) {
+        CardFactory factory;
+        switch (type) {
+            case MAGIC:
+                factory = new MagicCardFactory();
+                break;
+            case POKEMON:
+                factory = new PokemonCardFactory();
+                break;
+            case YUGIOH:
+                factory = new YuGiOhCardFactory();
+                break;
+            default:
+                throw new IllegalArgumentException("Unsupported game type: " + type);
+        }
+        return factory.createCard(name);
     }
 
     /**
@@ -172,4 +209,3 @@ public class DeckService {
         return loggedId == ownerUserId;
     }
 }
-

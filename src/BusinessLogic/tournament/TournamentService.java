@@ -2,6 +2,7 @@ package BusinessLogic.tournament;
 
 import ORM.dao.TournamentDAO;
 import DomainModel.tournament.*;
+import DomainModel.tournament.observer.UserObserver;
 import DomainModel.user.Role;
 import DomainModel.user.User;
 import BusinessLogic.session.UserSession;
@@ -48,6 +49,16 @@ public class TournamentService {
     private void checkTournamentIsPending(Tournament t) {
         if (t.getStatus() != TournamentStatus.PENDING)
             throw new IllegalStateException("Tournament can only be edited when in PENDING state.");
+    }
+
+    // ============================================================================
+    // OBSERVER HELPERS
+    // ============================================================================
+    private void attachObservers(Tournament t) {
+        if (t.getRegistrations() == null) return;
+        for (Registration r : t.getRegistrations()) {
+            t.addObserver(new UserObserver(r.getUser()));
+        }
     }
 
     // ============================================================================
@@ -137,6 +148,7 @@ public class TournamentService {
         if (t.getStatus() != TournamentStatus.PENDING)
             throw new IllegalStateException("Only PENDING tournaments can be approved.");
 
+        attachObservers(t);
         t.setStatus(TournamentStatus.APPROVED);
         tournamentDAO.updateTournament(t);
     }
@@ -148,6 +160,7 @@ public class TournamentService {
         if (t.getStatus() != TournamentStatus.PENDING)
             throw new IllegalStateException("Only PENDING tournaments can be rejected.");
 
+        // Nessuna notifica quando un torneo viene rifiutato
         t.setStatus(TournamentStatus.REJECTED);
         tournamentDAO.updateTournament(t);
     }
@@ -162,17 +175,20 @@ public class TournamentService {
 
             if (t.getStatus() == TournamentStatus.APPROVED &&
                     LocalDate.now().isAfter(t.getDeadline())) {
+                attachObservers(t);
                 t.setStatus(TournamentStatus.READY);
                 tournamentDAO.updateTournament(t);
             }
 
             if (t.getStatus() == TournamentStatus.READY &&
                     LocalDate.now().isAfter(t.getStartDate())) {
+                attachObservers(t);
                 t.setStatus(TournamentStatus.CLOSED);
                 tournamentDAO.updateTournament(t);
             }
 
             if(t.getStatus() == TournamentStatus.APPROVED && t.isFull()){
+                attachObservers(t);
                 t.setStatus(TournamentStatus.READY);
                 tournamentDAO.updateTournament(t);
             }

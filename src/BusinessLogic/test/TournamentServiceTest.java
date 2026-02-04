@@ -3,14 +3,20 @@ package BusinessLogic.test;
 import BusinessLogic.session.UserSession;
 import BusinessLogic.tournament.TournamentService;
 import DomainModel.GameType;
+import DomainModel.card.Deck;
 import DomainModel.tournament.*;
 import DomainModel.user.Role;
 import DomainModel.user.User;
 import ORM.connection.DatabaseConnection;
+import ORM.dao.DeckDAO;
+import ORM.dao.RegistrationDAO;
 import ORM.dao.TournamentDAO;
 import ORM.dao.UserDAO;
 import org.junit.jupiter.api.*;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -27,6 +33,8 @@ class TournamentServiceTest {
     private static TournamentService tournamentService;
     private static TournamentDAO tournamentDAO;
     private static UserDAO userDAO;
+    private static RegistrationDAO registrationDAO;
+    private static DeckDAO deckDAO;
 
     // ====================================================
     // SETUP
@@ -37,11 +45,15 @@ class TournamentServiceTest {
         tournamentService = new TournamentService(connection);
         tournamentDAO = new TournamentDAO(connection);
         userDAO = new UserDAO(connection);
+        registrationDAO = new RegistrationDAO(connection);
+        deckDAO = new DeckDAO(connection);
     }
 
     @BeforeEach
     void resetState() throws SQLException {
         clearTable("registrations");
+        clearTable("decks_cards");
+        clearTable("decks");
         clearTable("tournaments");
         clearTable("users");
         UserSession.getInstance().logout();
@@ -51,6 +63,8 @@ class TournamentServiceTest {
     static void cleanDatabase() throws SQLException {
         try (Statement stmt = connection.createStatement()) {
             stmt.executeUpdate("DELETE FROM registrations");
+            stmt.executeUpdate("DELETE FROM decks_cards");
+            stmt.executeUpdate("DELETE FROM decks");
             stmt.executeUpdate("DELETE FROM tournaments");
             stmt.executeUpdate("DELETE FROM users");
         }
@@ -84,6 +98,17 @@ class TournamentServiceTest {
         t.setStartDate(startDate);
         tournamentDAO.createTournament(t);
         return t;
+    }
+
+    private Deck createDeck(User owner, GameType type) throws SQLException {
+        Deck d = new Deck("DeckTest", owner, type);
+        deckDAO.createDeck(d);
+        return d;
+    }
+
+    private void createRegistration(Tournament t, User u, Deck d) throws SQLException {
+        Registration r = new Registration(t, u, d);
+        registrationDAO.createRegistration(r);
     }
 
     private void login(User u) {
@@ -152,7 +177,6 @@ class TournamentServiceTest {
         tournamentService.updateTournament(t);
         assertEquals(32, t.getCapacity());
     }
-
 
     @Test
     @Order(5)
@@ -405,5 +429,42 @@ class TournamentServiceTest {
         login(other);
         assertThrows(SecurityException.class,
                 () -> tournamentService.getTournamentsByOrganizer(org.getUserId()));
+    }
+
+    // ====================================================
+    // OBSERVER
+    // ====================================================
+    @Test
+    @Order(19)
+    void approve_notifies_registered_users() throws Exception {
+        User org = createUser("org_obs", Role.ORGANIZER);
+        User admin = createUser("admin_obs", Role.ADMIN);
+        User player = createUser("player_obs", Role.PLAYER);
+
+        Tournament t = createTournament(
+                org,
+                TournamentStatus.PENDING,
+                LocalDate.now().plusDays(5),
+                LocalDate.now().plusDays(10)
+        );
+
+        Deck deck = createDeck(player, GameType.MAGIC);
+        createRegistration(t, player, deck);
+
+        login(admin);
+
+        PrintStream originalOut = System.out;
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(buffer));
+
+        try {
+            tournamentService.approveTournament(t.getTournamentId());
+        } finally {
+            System.setOut(originalOut);
+        }
+
+        String output = buffer.toString(StandardCharsets.UTF_8);
+        assertTrue(output.contains("Notifica a " + player.getUsername()));
+        assertTrue(output.contains("ha cambiato stato in APPROVED"));
     }
 }

@@ -144,7 +144,7 @@ class DeckServiceTest {
     @Order(1)
     void createDeck_success() throws SQLException {
         User u = createPlayer("player1");
-        Deck deck = deckService.createDeck("MyDeck");
+        Deck deck = deckService.createDeck("MyDeck", GameType.MAGIC);
         assertNotNull(deck);
         assertEquals("MyDeck", deck.getDeckName());
         assertEquals(u.getUserId(), deck.getOwner().getUserId());
@@ -153,7 +153,7 @@ class DeckServiceTest {
     @Test
     @Order(2)
     void createDeck_notLoggedIn() {
-        assertThrows(SecurityException.class, () -> deckService.createDeck("NoLoginDeck"));
+        assertThrows(SecurityException.class, () -> deckService.createDeck("NoLoginDeck", GameType.POKEMON));
     }
 
     // ====================================================
@@ -163,8 +163,8 @@ class DeckServiceTest {
     @Order(3)
     void getMyDecks_success() throws SQLException {
         User u = createPlayer("player2");
-        deckService.createDeck("Deck1");
-        deckService.createDeck("Deck2");
+        deckService.createDeck("Deck1", GameType.YUGIOH);
+        deckService.createDeck("Deck2", GameType.MAGIC);
 
         List<Deck> decks = deckService.getMyDecks();
         assertEquals(2, decks.size());
@@ -183,7 +183,7 @@ class DeckServiceTest {
     @Order(5)
     void renameDeck_success() throws SQLException {
         User u = createPlayer("player3");
-        Deck deck = deckService.createDeck("OldName");
+        Deck deck = deckService.createDeck("OldName", GameType.POKEMON);
 
         deckService.renameDeck(deck.getDeckId(), "NewName");
 
@@ -195,7 +195,7 @@ class DeckServiceTest {
     @Order(6)
     void renameDeck_notOwner() throws SQLException {
         User u1 = createPlayer("player4");
-        Deck deck = deckService.createDeck("Deck4");
+        Deck deck = deckService.createDeck("Deck4", GameType.MAGIC);
         User u2 = createPlayer("player5");
 
         assertThrows(SecurityException.class,
@@ -206,7 +206,7 @@ class DeckServiceTest {
     @Order(7)
     void renameDeck_invalidName() throws SQLException {
         User u = createPlayer("player6");
-        Deck deck = deckService.createDeck("Deck6");
+        Deck deck = deckService.createDeck("Deck6", GameType.YUGIOH);
 
         assertThrows(IllegalArgumentException.class,
                 () -> deckService.renameDeck(deck.getDeckId(), ""));
@@ -221,7 +221,7 @@ class DeckServiceTest {
     @Order(8)
     void deleteDeck_success() throws SQLException {
         User u = createPlayer("player7");
-        Deck deck = deckService.createDeck("DeckToDelete");
+        Deck deck = deckService.createDeck("DeckToDelete", GameType.POKEMON);
 
         deckService.deleteDeck(deck.getDeckId());
         assertThrows(IllegalArgumentException.class, () -> deckService.getDeckById(deck.getDeckId()));
@@ -231,7 +231,7 @@ class DeckServiceTest {
     @Order(9)
     void deleteDeck_notOwner() throws SQLException {
         User u1 = createPlayer("player8");
-        Deck deck = deckService.createDeck("DeckNotOwner");
+        Deck deck = deckService.createDeck("DeckNotOwner", GameType.MAGIC);
         User u2 = createPlayer("player9");
 
         assertThrows(SecurityException.class, () -> deckService.deleteDeck(deck.getDeckId()));
@@ -244,10 +244,10 @@ class DeckServiceTest {
     @Order(10)
     void addCardToDeck_success() throws SQLException {
         User u = createPlayer("player10");
-        Deck deck = deckService.createDeck("DeckWithCard");
+        Deck deck = deckService.createDeck("DeckWithCard", GameType.MAGIC);
         Card card = createCard("Card1", deck.getGameType());
 
-        deckService.addCardToDeck(deck.getDeckId(), card.getCardId());
+        deckService.addCardToDeck(deck.getDeckId(), card.getName());
         List<Card> cards = deckService.getCardsInDeck(deck.getDeckId());
         assertEquals(1, cards.size());
         assertEquals(card.getName(), cards.get(0).getName());
@@ -257,23 +257,23 @@ class DeckServiceTest {
     @Order(11)
     void addCardToDeck_wrongType() throws SQLException {
         User u = createPlayer("player11");
-        Deck deck = deckService.createDeck("DeckWrongType");
+        Deck deck = deckService.createDeck("DeckWrongType", GameType.POKEMON);
         Card card = createCard("CardWrong", GameType.YUGIOH); // tipo incompatibile
 
         assertThrows(IllegalArgumentException.class,
-                () -> deckService.addCardToDeck(deck.getDeckId(), card.getCardId()));
+                () -> deckService.addCardToDeck(deck.getDeckId(), card.getName()));
     }
 
     @Test
     @Order(12)
     void addCardToDeck_notOwner() throws SQLException {
         User u1 = createPlayer("player12");
-        Deck deck = deckService.createDeck("DeckNotOwnerCard");
+        Deck deck = deckService.createDeck("DeckNotOwnerCard", GameType.YUGIOH);
         Card card = createCard("Card2", deck.getGameType());
         User u2 = createPlayer("player13");
 
         assertThrows(SecurityException.class,
-                () -> deckService.addCardToDeck(deck.getDeckId(), card.getCardId()));
+                () -> deckService.addCardToDeck(deck.getDeckId(), card.getName()));
     }
 
     // ====================================================
@@ -283,9 +283,9 @@ class DeckServiceTest {
     @Order(13)
     void removeCardFromDeck_success() throws SQLException {
         User u = createPlayer("player14");
-        Deck deck = deckService.createDeck("DeckRemoveCard");
+        Deck deck = deckService.createDeck("DeckRemoveCard", GameType.MAGIC);
         Card card = createCard("Card3", deck.getGameType());
-        deckService.addCardToDeck(deck.getDeckId(), card.getCardId());
+        deckService.addCardToDeck(deck.getDeckId(), card.getName());
 
         deckService.removeCardFromDeck(deck.getDeckId(), card.getCardId());
         List<Card> cards = deckService.getCardsInDeck(deck.getDeckId());
@@ -296,9 +296,9 @@ class DeckServiceTest {
     @Order(14)
     void removeCardFromDeck_notOwnerOrAdmin() throws SQLException {
         User u1 = createPlayer("player15");
-        Deck deck = deckService.createDeck("DeckRemoveIllegal");
+        Deck deck = deckService.createDeck("DeckRemoveIllegal", GameType.POKEMON);
         Card card = createCard("Card4", deck.getGameType());
-        deckService.addCardToDeck(deck.getDeckId(), card.getCardId());
+        deckService.addCardToDeck(deck.getDeckId(), card.getName());
 
         User u2 = createPlayer("player16");
         assertThrows(SecurityException.class,
