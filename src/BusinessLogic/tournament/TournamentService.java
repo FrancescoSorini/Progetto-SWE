@@ -196,7 +196,7 @@ public class TournamentService {
     }
 
     // ============================================================================
-    // 6) GETTERS (permissions vary) --- IA!
+    // 6) GETTERS (permissions vary)
     // ============================================================================
     public Tournament getTournamentById(int tournamentId) throws SQLException {
         return tournamentDAO.getTournamentById(tournamentId);

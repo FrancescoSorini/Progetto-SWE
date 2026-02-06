@@ -145,21 +145,21 @@ class CardServiceTest {
 
     @Test
     @Order(6)
-    void searchCardsByName_success() throws SQLException {
+    void searchCardByName_success() throws SQLException {
         createAdmin("admin5");
         Card c = new Card("Earth", GameType.MAGIC);
         cardService.createCard(c);
 
-        Card found = cardService.searchCardsByName("Earth");
+        Card found = cardService.searchCardByName("Earth");
         assertNotNull(found);
         assertEquals("Earth", found.getName());
     }
 
     @Test
     @Order(7)
-    void searchCardsByName_invalid() {
+    void searchCardByName_invalid() {
         assertThrows(IllegalArgumentException.class,
-                () -> cardService.searchCardsByName(""));
+                () -> cardService.searchCardByName(""));
     }
 
     // ============================================================

@@ -40,12 +40,45 @@ public class CardService {
     // 1. CREATE CARD (Admin only) - via Factory
     // ====================================================================================
     public void createCard(Card card) throws SQLException {
-        if (card == null) {
-            throw new IllegalArgumentException("Card cannot be null.");
-        }
-        createCard(card.getName(), card.getType());
+        createCardViaFactory(card.getName(), card.getType());
     }
 
+    private void createCardViaFactory(String name, GameType type) throws SQLException {
+        checkAdminPermission();
+
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("Card name cannot be empty.");
+        }
+        if (type == null) {
+            throw new IllegalArgumentException("Card type must be provided.");
+        }
+
+        if (isDuplicate(name)) {
+            throw new IllegalArgumentException("A card with this name already exists.");
+        }
+
+        CardFactory factory;
+        switch (type) {
+            case MAGIC:
+                factory = new MagicCardFactory();
+                break;
+            case POKEMON:
+                factory = new PokemonCardFactory();
+                break;
+            case YUGIOH:
+                factory = new YuGiOhCardFactory();
+                break;
+            default:
+                throw new IllegalArgumentException("Unsupported game type: " + type);
+        }
+
+        Card card = factory.createCard(name);
+        validateCard(card);
+
+        cardDAO.addCard(card);
+    }
+
+    /*
     public void createCard(String name, GameType type) throws SQLException {
         checkAdminPermission();
 
@@ -66,6 +99,7 @@ public class CardService {
         cardDAO.addCard(card);
     }
 
+
     private Card createCardViaFactory(String name, GameType type) {
         CardFactory factory;
         switch (type) {
@@ -83,6 +117,7 @@ public class CardService {
         }
         return factory.createCard(name);
     }
+     */
 
     // ====================================================================================
     // 2. GET CARD BY ID (everyone)
@@ -101,7 +136,7 @@ public class CardService {
     // ====================================================================================
     // 4. SEARCH CARDS BY NAME (everyone)
     // ====================================================================================
-    public Card searchCardsByName(String name) throws SQLException {
+    public Card searchCardByName(String name) throws SQLException {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("Name filter cannot be empty.");
         }

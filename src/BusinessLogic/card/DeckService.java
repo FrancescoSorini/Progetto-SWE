@@ -156,6 +156,7 @@ public class DeckService {
         deckDAO.addCardToDeck(deckId, card.getCardId());
     }
 
+    /* UTIL per creazione carte */
     private Card createCardViaFactory(String name, GameType type) {
         CardFactory factory;
         switch (type) {
