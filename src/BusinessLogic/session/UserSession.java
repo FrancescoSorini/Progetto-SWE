@@ -1,11 +1,13 @@
 package BusinessLogic.session;
 
 import DomainModel.user.User;
+import DomainModel.GameType;
 
 public class UserSession {
 
     private static UserSession instance;
     private static User currentUser;
+    private GameType currentGameType;   // <-- NUOVO CAMPO
 
     private UserSession() {}
 
@@ -47,6 +49,20 @@ public class UserSession {
         return (currentUser != null) ? currentUser.getEmail() : null;
     }
 
+    // ---- Gestione GameType ----
+    public void setGameType(GameType gameType) {
+        this.currentGameType = gameType;
+    }
+
+    public GameType getGameType() {
+        return currentGameType;
+    }
+
+    public boolean hasSelectedGame() {
+        return currentGameType != null;
+    }
+
+    // ---- Controlli ruolo ----
     public static boolean isAdmin() {
         return isLoggedIn() && currentUser.getRole().name().equals("ADMIN");
     }
