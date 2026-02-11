@@ -1,5 +1,6 @@
 package BusinessLogic.tournament;
 
+import DomainModel.GameType;
 import ORM.dao.TournamentDAO;
 import DomainModel.tournament.*;
 import DomainModel.tournament.observer.UserObserver;
@@ -229,6 +230,13 @@ public class TournamentService {
         return tournamentDAO.getAllTournaments()
                 .stream()
                 .filter(t -> t.getOrganizer().getUserId() == organizerId)
+                .toList();
+    }
+
+    public List<Tournament> getTournamentsByGameType(GameType gameType) throws SQLException {
+        return tournamentDAO.getAllTournaments()
+                .stream()
+                .filter(t -> t.getGameType() == gameType)
                 .toList();
     }
 }

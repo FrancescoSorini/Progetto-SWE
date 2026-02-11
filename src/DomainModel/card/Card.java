@@ -25,15 +25,6 @@ public class Card {
     public void setCardType(GameType type) { this.gameType = type; }
     public void setCardId(int cardId) { this.cardId = cardId; }
 
-    /*
-    Mostra testualmente la carta
-    public String displayCard() {
-        return "Card{" +
-                "name='" + name + '\'' +
-                ", type=" + gameType.getDisplayName() +
-                '}';
-    }
-    */
 
     //Sovrascrivo equals per confrontare le carte in base al loro ID
     @Override

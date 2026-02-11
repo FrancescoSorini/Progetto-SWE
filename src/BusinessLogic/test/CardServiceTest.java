@@ -145,6 +145,22 @@ class CardServiceTest {
 
     @Test
     @Order(6)
+    void getCardsByGameType() throws SQLException {
+        createAdmin("admin4");
+        Card c1 = new Card("Aqua", GameType.MAGIC);
+        Card c2 = new Card("Flame", GameType.MAGIC);
+        Card c3 = new Card("Pikachu", GameType.POKEMON);
+        cardService.createCard(c1);
+        cardService.createCard(c2);
+        cardService.createCard(c3);
+
+        List<Card> magicCards = cardDAO.getCardsByGameType(GameType.MAGIC);
+        assertEquals(2, magicCards.size());
+        assertTrue(magicCards.stream().allMatch(c -> c.getType() == GameType.MAGIC));
+    }
+
+    @Test
+    @Order(7)
     void searchCardByName_success() throws SQLException {
         createAdmin("admin5");
         Card c = new Card("Earth", GameType.MAGIC);
@@ -156,7 +172,7 @@ class CardServiceTest {
     }
 
     @Test
-    @Order(7)
+    @Order(8)
     void searchCardByName_invalid() {
         assertThrows(IllegalArgumentException.class,
                 () -> cardService.searchCardByName(""));
@@ -166,7 +182,7 @@ class CardServiceTest {
     // 3. UPDATE CARD (ADMIN)
     // ============================================================
     @Test
-    @Order(8)
+    @Order(9)
     void updateCardName_success() throws SQLException {
         createAdmin("admin6");
         Card c = new Card("Wind", GameType.MAGIC);
@@ -179,7 +195,7 @@ class CardServiceTest {
     }
 
     @Test
-    @Order(9)
+    @Order(10)
     void updateCardName_duplicate() throws SQLException {
         createAdmin("admin7");
         cardService.createCard(new Card("Fire", GameType.MAGIC));
@@ -189,14 +205,14 @@ class CardServiceTest {
     }
 
     @Test
-    @Order(10)
+    @Order(11)
     void updateCardName_notAdmin() throws SQLException {
         UserSession.getInstance().login(createPlayer("player2"));
         assertThrows(SecurityException.class, () -> cardService.updateCardName(1, "Any"));
     }
 
     @Test
-    @Order(11)
+    @Order(12)
     void updateCardType_success() throws SQLException {
         createAdmin("admin8");
         Card c = new Card("Stone", GameType.MAGIC);
@@ -209,7 +225,7 @@ class CardServiceTest {
     }
 
     @Test
-    @Order(12)
+    @Order(13)
     void updateCardType_notAdmin() throws SQLException {
         UserSession.getInstance().login(createPlayer("player3"));
         assertThrows(SecurityException.class, () -> cardService.updateCardType(1, GameType.YUGIOH));
@@ -219,7 +235,7 @@ class CardServiceTest {
     // 4. DELETE CARD (ADMIN)
     // ============================================================
     @Test
-    @Order(13)
+    @Order(14)
     void deleteCard_success() throws SQLException {
         createAdmin("admin9");
         Card c = new Card("Shadow", GameType.MAGIC);
@@ -230,7 +246,7 @@ class CardServiceTest {
     }
 
     @Test
-    @Order(14)
+    @Order(15)
     void deleteCard_notAdmin() throws SQLException {
         UserSession.getInstance().login(createPlayer("player4"));
         assertThrows(SecurityException.class, () -> cardService.deleteCard(1));

@@ -176,11 +176,27 @@ class DeckServiceTest {
         assertThrows(SecurityException.class, () -> deckService.getMyDecks());
     }
 
+    @Test
+    @Order(5)
+    void getDecksByGameType() throws SQLException {
+        User u = createPlayer("player3");
+        deckService.createDeck("DeckPokemon", GameType.POKEMON);
+        deckService.createDeck("DeckMagic", GameType.MAGIC);
+
+        List<Deck> pokemonDecks = deckService.getDecksByGameType(GameType.POKEMON);
+        assertEquals(1, pokemonDecks.size());
+        assertEquals("DeckPokemon", pokemonDecks.get(0).getDeckName());
+
+        List<Deck> magicDecks = deckService.getDecksByGameType(GameType.MAGIC);
+        assertEquals(1, magicDecks.size());
+        assertEquals("DeckMagic", magicDecks.get(0).getDeckName());
+    }
+
     // ====================================================
     // 3. RENAME DECK
     // ====================================================
     @Test
-    @Order(5)
+    @Order(6)
     void renameDeck_success() throws SQLException {
         User u = createPlayer("player3");
         Deck deck = deckService.createDeck("OldName", GameType.POKEMON);
@@ -192,7 +208,7 @@ class DeckServiceTest {
     }
 
     @Test
-    @Order(6)
+    @Order(7)
     void renameDeck_notOwner() throws SQLException {
         User u1 = createPlayer("player4");
         Deck deck = deckService.createDeck("Deck4", GameType.MAGIC);
@@ -203,7 +219,7 @@ class DeckServiceTest {
     }
 
     @Test
-    @Order(7)
+    @Order(8)
     void renameDeck_invalidName() throws SQLException {
         User u = createPlayer("player6");
         Deck deck = deckService.createDeck("Deck6", GameType.YUGIOH);
@@ -218,7 +234,7 @@ class DeckServiceTest {
     // 4. DELETE DECK
     // ====================================================
     @Test
-    @Order(8)
+    @Order(9)
     void deleteDeck_success() throws SQLException {
         User u = createPlayer("player7");
         Deck deck = deckService.createDeck("DeckToDelete", GameType.POKEMON);
@@ -228,7 +244,7 @@ class DeckServiceTest {
     }
 
     @Test
-    @Order(9)
+    @Order(10)
     void deleteDeck_notOwner() throws SQLException {
         User u1 = createPlayer("player8");
         Deck deck = deckService.createDeck("DeckNotOwner", GameType.MAGIC);
@@ -241,7 +257,7 @@ class DeckServiceTest {
     // 5. ADD CARD TO DECK
     // ====================================================
     @Test
-    @Order(10)
+    @Order(11)
     void addCardToDeck_success() throws SQLException {
         User u = createPlayer("player10");
         Deck deck = deckService.createDeck("DeckWithCard", GameType.MAGIC);
@@ -254,7 +270,7 @@ class DeckServiceTest {
     }
 
     @Test
-    @Order(11)
+    @Order(12)
     void addCardToDeck_wrongType() throws SQLException {
         User u = createPlayer("player11");
         Deck deck = deckService.createDeck("DeckWrongType", GameType.POKEMON);
@@ -265,7 +281,7 @@ class DeckServiceTest {
     }
 
     @Test
-    @Order(12)
+    @Order(13)
     void addCardToDeck_notOwner() throws SQLException {
         User u1 = createPlayer("player12");
         Deck deck = deckService.createDeck("DeckNotOwnerCard", GameType.YUGIOH);
@@ -280,7 +296,7 @@ class DeckServiceTest {
     // 6. REMOVE CARD FROM DECK
     // ====================================================
     @Test
-    @Order(13)
+    @Order(14)
     void removeCardFromDeck_success() throws SQLException {
         User u = createPlayer("player14");
         Deck deck = deckService.createDeck("DeckRemoveCard", GameType.MAGIC);
@@ -293,7 +309,7 @@ class DeckServiceTest {
     }
 
     @Test
-    @Order(14)
+    @Order(15)
     void removeCardFromDeck_notOwnerOrAdmin() throws SQLException {
         User u1 = createPlayer("player15");
         Deck deck = deckService.createDeck("DeckRemoveIllegal", GameType.POKEMON);

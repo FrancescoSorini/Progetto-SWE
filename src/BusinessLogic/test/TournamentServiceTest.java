@@ -386,6 +386,27 @@ class TournamentServiceTest {
 
     @Test
     @Order(16)
+    void get_tournaments_by_game_type() throws Exception {
+        User admin = createUser("admin5", Role.ADMIN);
+
+        Tournament t1 = createTournament(admin, TournamentStatus.PENDING,
+                LocalDate.now().plusDays(5),
+                LocalDate.now().plusDays(10));
+
+        Tournament t2 = createTournament(admin, TournamentStatus.PENDING,
+                LocalDate.now().plusDays(5),
+                LocalDate.now().plusDays(10));
+        t2.setGameType(GameType.YUGIOH);
+        tournamentDAO.updateTournament(t2);
+
+        login(admin);
+        List<Tournament> magicTournaments =
+                tournamentService.getTournamentsByGameType(GameType.MAGIC);
+        assertEquals(1, magicTournaments.size());
+    }
+
+    @Test
+    @Order(17)
     void player_sees_only_approved_ready() throws Exception {
         User org = createUser("org12", Role.ORGANIZER);
         User p = createUser("p3", Role.PLAYER);
@@ -403,7 +424,7 @@ class TournamentServiceTest {
     }
 
     @Test
-    @Order(17)
+    @Order(18)
     void get_by_organizer_correct() throws Exception {
         User org = createUser("org13", Role.ORGANIZER);
         login(org);
@@ -417,7 +438,7 @@ class TournamentServiceTest {
     }
 
     @Test
-    @Order(18)
+    @Order(19)
     void get_by_organizer_forbidden() throws Exception {
         User org = createUser("org14", Role.ORGANIZER);
         User other = createUser("org15", Role.ORGANIZER);
@@ -435,7 +456,7 @@ class TournamentServiceTest {
     // OBSERVER
     // ====================================================
     @Test
-    @Order(19)
+    @Order(20)
     void approve_notifies_registered_users() throws Exception {
         User org = createUser("org_obs", Role.ORGANIZER);
         User admin = createUser("admin_obs", Role.ADMIN);

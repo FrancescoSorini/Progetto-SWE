@@ -58,7 +58,7 @@ public class DeckService {
     }
 
     /**
-     * Restituisce tutti i deck dellâ€™utente loggato.
+     * Restituisce tutti i deck dell'utente loggato.
      */
     public List<Deck> getMyDecks() throws SQLException {
         if (!UserSession.isLoggedIn()) {
@@ -66,6 +66,17 @@ public class DeckService {
         }
         return deckDAO.getAllDecksByUser(UserSession.getUserId());
     }
+
+    /*
+    * Restituisce tutti i deck di un certo GameType di un utente
+    * */
+    public List<Deck> getDecksByGameType(GameType gameType) throws SQLException {
+        if (!UserSession.isLoggedIn()) {
+            throw new SecurityException("Devi essere loggato.");
+        }
+        return deckDAO.getDecksByGameType(gameType);
+    }
+
 
     /**
      * Restituisce un deck

@@ -78,47 +78,6 @@ public class CardService {
         cardDAO.addCard(card);
     }
 
-    /*
-    public void createCard(String name, GameType type) throws SQLException {
-        checkAdminPermission();
-
-        if (name == null || name.isBlank()) {
-            throw new IllegalArgumentException("Card name cannot be empty.");
-        }
-        if (type == null) {
-            throw new IllegalArgumentException("Card type must be provided.");
-        }
-
-        if (isDuplicate(name)) {
-            throw new IllegalArgumentException("A card with this name already exists.");
-        }
-
-        Card card = createCardViaFactory(name, type);
-        validateCard(card);
-
-        cardDAO.addCard(card);
-    }
-
-
-    private Card createCardViaFactory(String name, GameType type) {
-        CardFactory factory;
-        switch (type) {
-            case MAGIC:
-                factory = new MagicCardFactory();
-                break;
-            case POKEMON:
-                factory = new PokemonCardFactory();
-                break;
-            case YUGIOH:
-                factory = new YuGiOhCardFactory();
-                break;
-            default:
-                throw new IllegalArgumentException("Unsupported game type: " + type);
-        }
-        return factory.createCard(name);
-    }
-     */
-
     // ====================================================================================
     // 2. GET CARD BY ID (everyone)
     // ====================================================================================
@@ -141,6 +100,16 @@ public class CardService {
             throw new IllegalArgumentException("Name filter cannot be empty.");
         }
         return cardDAO.getCardByName(name);
+    }
+
+    // ====================================================================================
+    // 5. GET CARDS BY GAMETYPE (everyone)
+    // ====================================================================================
+    public List<Card> getCardsByGameType(GameType type) throws SQLException {
+        if (type == null) {
+            throw new IllegalArgumentException("Game type filter cannot be null.");
+        }
+        return cardDAO.getCardsByGameType(type);
     }
 
     // ====================================================================================
