@@ -48,27 +48,22 @@ public class User {
     public void setRole(Role role) { this.role = role; }
 
     public boolean isEnabled() { return enabled; }
-}
 
-/*
-Usage example in a main.java file:
-import DomainModel.tournament.*;
-import DomainModel.user.*;
-import DomainModel.tournament.observer.*;
+    public static void printUsers(List<User> users) {
 
-public class Main {
-    public static void main(String[] args) {
-        Tournament t = new Tournament("Spring Duel Cup");
+        if (users.isEmpty()) {
+            System.out.println("Nessun utente trovato.");
+            return;
+        }
 
-        User u1 = new User("Francesco");
-        User u2 = new User("Luca");
-
-        t.addObserver(new UserObserver(u1));
-        t.addObserver(new UserObserver(u2));
-
-        t.setStatus(TournamentStatus.APPROVED);
-        t.setStatus(TournamentStatus.CLOSED);
+        for (User user : users) {
+            System.out.println("----------------------");
+            System.out.println("ID: " + user.getUserId());
+            System.out.println("Username: " + user.getUsername());
+            System.out.println("Email: " + user.getEmail());
+            System.out.println("Ruolo: " + user.getRole());
+        }
     }
+
 }
 
- */

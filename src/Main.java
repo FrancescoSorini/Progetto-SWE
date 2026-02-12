@@ -7,10 +7,16 @@
 import BusinessLogic.session.UserSession;
 import BusinessLogic.user.UserService;
 import DomainModel.GameType;
+import DomainModel.card.Card;
+import static DomainModel.card.Card.printCards;
 import DomainModel.user.Role;
 import DomainModel.user.User;
+import static DomainModel.user.User.printUsers;
 import ORM.connection.DatabaseConnection;
+import BusinessLogic.card.CardService;
 
+import java.sql.SQLException;
+import java.util.List;
 import java.util.Scanner;
 
 
@@ -18,6 +24,7 @@ public class Main {
 
     private static final Scanner scanner = new Scanner(System.in);
     private static final UserService userService = new UserService(DatabaseConnection.getConnection());
+    private static final CardService cardService = new CardService(DatabaseConnection.getConnection());
 
     public static void main(String[] args) {
 
@@ -102,6 +109,7 @@ public class Main {
         }
     }
 
+    // ------------------ SELEZIONE DEL GIOCO ------------------
     private static void selectGame() {
         System.out.println("\nScegli il gioco:");
         System.out.println("1) Magic");
@@ -122,7 +130,8 @@ public class Main {
         }
     }
 
-    private static void showRoleMenu() {
+    // ------------------ SELEZIONE DEL MENU IN BASE ALL'UTENTE ------------------
+    private static void showRoleMenu() throws SQLException {
         Role role = UserSession.getInstance().getCurrentUser().getRole();
 
         switch (role) {
@@ -132,7 +141,8 @@ public class Main {
         }
     }
 
-    private static void playerMenu() {
+    // ------------------ MENU BASE PLAYER ------------------
+    private static void playerMenu() throws SQLException {
         boolean running = true;
 
         while (running) {
@@ -147,7 +157,7 @@ public class Main {
 
             switch (choice) {
                 case "1" -> System.out.println(">> Gestione Mazzi (da implementare)");
-                case "2" -> System.out.println(">> Catalogo Carte (da implementare)");
+                case "2" -> catalogoCarteMenu();
                 case "3" -> System.out.println(">> Check Tornei (da implementare)");
                 case "4" -> {
                     UserSession.getInstance().logout();
@@ -158,7 +168,8 @@ public class Main {
         }
     }
 
-    private static void adminMenu() {
+    // ------------------ MENU BASE ADMIN ------------------
+    private static void adminMenu() throws SQLException {
         boolean running = true;
 
         while (running) {
@@ -173,7 +184,7 @@ public class Main {
 
             switch (choice) {
                 case "1" -> System.out.println(">> Gestione Carte (da implementare)");
-                case "2" -> System.out.println(">> Gestione Utenti (da implementare)");
+                case "2" -> gestioneUtentiMenu();
                 case "3" -> System.out.println(">> Approvazione Tornei (da implementare)");
                 case "4" -> {
                     UserSession.getInstance().logout();
@@ -184,6 +195,7 @@ public class Main {
         }
     }
 
+    // ------------------ MENU BASE ORGANIZER ------------------
     private static void organizerMenu() {
         boolean running = true;
 
@@ -207,6 +219,106 @@ public class Main {
             }
         }
     }
+
+    // ------------------ SOTTOMENU 2 PLAYER (CATALOGO CARTE) ------------------
+    private static void catalogoCarteMenu() throws SQLException {
+        boolean running = true;
+
+        while (running) {
+            System.out.println("\n--- CATALOGO CARTE ---");
+            System.out.println("1) Visualizza tutte le carte");
+            System.out.println("2) Cerca carta per nome");
+            System.out.println("3) Indietro");
+            System.out.print("Scelta: ");
+
+            String choice = scanner.nextLine();
+            GameType gameType = UserSession.getInstance().getGameType();
+
+            switch (choice) {
+
+                case "1" -> {
+                    List<Card> cards = cardService.getCardsByGameType(gameType);
+                    printCards(cards);
+                }
+
+                case "2" -> {
+                    System.out.print("Inserisci nome (anche parziale): ");
+                    String keyword = scanner.nextLine();
+
+                    List<Card> results =
+                            cardService.searchCardsByName(gameType, keyword);
+
+                    printCards(results);
+                }
+
+                case "3" -> running = false;
+
+                default -> System.out.println("Scelta non valida.");
+            }
+        }
+    }
+
+    // ------------------ SOTTOMENU 2 ADMIN (LISTA UTENTI) ------------------
+    private static void gestioneUtentiMenu() throws SQLException {
+
+        boolean running = true;
+
+        while (running) {
+
+            System.out.println("\n--- GESTIONE UTENTI ---");
+            System.out.println("1) Visualizza tutti gli utenti");
+            System.out.println("2) Cerca utente per nome");
+            System.out.println("3) Indietro");
+            System.out.print("Scelta: ");
+
+            String choice = scanner.nextLine();
+
+            switch (choice) {
+
+                case "1" -> {
+                    List<User> users = userService.getAllUsers();
+                    printUsers(users);
+                }
+
+                case "2" -> {
+                    System.out.print("Inserisci nome (anche parziale): ");
+                    String keyword = scanner.nextLine();
+
+                    List<User> results =
+                            userService.searchUsersByName(keyword);
+
+                    printUsers(results);
+                }
+
+                case "3" -> running = false;
+
+                default -> System.out.println("Scelta non valida.");
+            }
+        }
+    }
+
+
+/*
+Visualizza utenti
+-
+-
+-
+-
+-
+
+1) Vuoi eliminare un utente? getUserById per recuperare l'utente da eliminare
+2) Vuoi modificare l'abilitazione di un utente? getUserById
+3) Vuoi modificare il ruolo di un utente? getUserById
+
+
+Cerca utente per nome (Fuzzy search)
+-
+-
+-
+1) Vuoi eliminare un utente? getUserById per recuperare l'utente da eliminare
+2) Vuoi modificare l'abilitazione di un utente? getUserById
+3) Vuoi modificare il ruolo di un utente? getUserById
+ */
 
 
 

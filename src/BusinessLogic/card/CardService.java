@@ -93,14 +93,24 @@ public class CardService {
     }
 
     // ====================================================================================
-    // 4. SEARCH CARDS BY NAME (everyone)
+    // 4. SEARCH CARDS BY NAME (everyone) #TODO: Testing
     // ====================================================================================
-    public Card searchCardByName(String name) throws SQLException {
-        if (name == null || name.isBlank()) {
-            throw new IllegalArgumentException("Name filter cannot be empty.");
+    public List<Card> searchCardsByName(GameType gameType, String keyword) throws SQLException {
+
+        if (keyword == null || keyword.isBlank()) {
+            throw new IllegalArgumentException("Nome non valido");
         }
-        return cardDAO.getCardByName(name);
+
+        List<Card> allCards = cardDAO.getCardsByGameType(gameType);
+
+        String lowerKeyword = keyword.toLowerCase();
+
+        return allCards.stream()
+                .filter(card ->
+                        card.getName().toLowerCase().contains(lowerKeyword))
+                .toList();
     }
+
 
     // ====================================================================================
     // 5. GET CARDS BY GAMETYPE (everyone)

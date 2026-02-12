@@ -166,7 +166,7 @@ class CardServiceTest {
         Card c = new Card("Earth", GameType.MAGIC);
         cardService.createCard(c);
 
-        Card found = cardService.searchCardByName("Earth");
+        Card found = (Card) cardService.searchCardsByName(GameType.MAGIC, "Earth");
         assertNotNull(found);
         assertEquals("Earth", found.getName());
     }
@@ -175,7 +175,7 @@ class CardServiceTest {
     @Order(8)
     void searchCardByName_invalid() {
         assertThrows(IllegalArgumentException.class,
-                () -> cardService.searchCardByName(""));
+                () -> cardService.searchCardsByName(GameType.MAGIC, ""));
     }
 
     // ============================================================

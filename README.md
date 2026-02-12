@@ -20,4 +20,15 @@ Ad esempio, le regole per la registrazione ai tornei, la gestione dei deck e l'a
 Abbiamo preferito creare una classe apposita per gestire la sessione di un utente autenticato, 
 in modo da mantenere traccia dello stato dell'utente e delle sue caratteristiche (se è Admin, Organizer o Player)
 durante l'interazione con il sistema.
-Ci manca ancora da fare i test di questa parte (sempre con JUnit).
+
+## Testing
+Stiamo sviluppando l'interfaccia CLI per far funzionare l'applicazione.
+Dobbiamo rifare i test, una volta che l'interfaccia sarà pronta, per verificare che tutte le funzionalità siano correttamente implementate e funzionanti.
+Questo perchè durante lo sviluppo della CLI potrebbero venirci in mente nuove funzionilità da aggiungere o modificare, 
+e quindi è importante assicurarsi che tutto funzioni come previsto dopo ogni modifica.
+Specialmente per i test della BusinessLogic.
+
+##TODO
+- Correggere comportamenti errati nella CLI con messaggi di errore più chiari.
+- Modifica Use Case Diagram con le nuove funzioni aggiunte nel main
+- 

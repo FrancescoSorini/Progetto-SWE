@@ -151,6 +151,24 @@ public class UserService {
     }
 
     // ============================================================
+    // 8.1) RECUPERO UTENTI By Name CON FUZZY SEARCH #TODO: Testing
+    // ============================================================
+    public List<User> searchUsersByName(String keyword) throws SQLException {
+
+        if (keyword == null || keyword.isBlank()) {
+            throw new IllegalArgumentException("Nome non valido");
+        }
+
+        List<User> allUsers = userDAO.getAllUsers();
+
+        return allUsers.stream()
+                .filter(u -> u.getUsername().toLowerCase().contains(keyword.toLowerCase()))
+                .toList();
+
+    }
+
+
+    // ============================================================
     // 9) RECUPERO TUTTI GLI UTENTI (solo admin)
     // ============================================================
     public List<User> getAllUsers() throws SQLException {
