@@ -1,12 +1,12 @@
 package BusinessLogic.tournament;
 
 import DomainModel.GameType;
-import ORM.dao.TournamentDAO;
-import DomainModel.tournament.*;
+import DomainModel.tournament.Registration;
+import DomainModel.tournament.Tournament;
+import DomainModel.tournament.TournamentStatus;
 import DomainModel.tournament.observer.UserObserver;
-import DomainModel.user.Role;
 import DomainModel.user.User;
-import BusinessLogic.session.UserSession;
+import ORM.dao.TournamentDAO;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -22,146 +22,62 @@ public class TournamentService {
     }
 
     // ============================================================================
-    // SECURITY HELPERS
+    // 1) CREATE TOURNAMENT
     // ============================================================================
-    private User currentUser() {
-        User u = UserSession.getInstance().getCurrentUser();
-        if (u == null)
-            throw new SecurityException("You must be logged in.");
-        return u;
-    }
-
-    private void checkAdmin() {
-        if (currentUser().getRole() != Role.ADMIN)
-            throw new SecurityException("Only ADMIN can perform this action.");
-    }
-
-    private void checkOrganizer() {
-        if (currentUser().getRole() != Role.ORGANIZER)
-            throw new SecurityException("Only ORGANIZER can perform this action.");
-    }
-
-    private void checkOrganizerOwnership(Tournament t) {
-        User u = currentUser();
-        if (u.getRole() != Role.ORGANIZER || t.getOrganizer().getUserId() != u.getUserId())
-            throw new SecurityException("You can only modify tournaments you created.");
-    }
-
-    private void checkTournamentIsPending(Tournament t) {
-        if (t.getStatus() != TournamentStatus.PENDING)
-            throw new IllegalStateException("Tournament can only be edited when in PENDING state.");
-    }
-
-    // ============================================================================
-    // OBSERVER HELPERS
-    // ============================================================================
-    private void attachObservers(Tournament t) {
-        if (t.getRegistrations() == null) return;
-        for (Registration r : t.getRegistrations()) {
-            t.addObserver(new UserObserver(r.getUser()));
-        }
-    }
-
-    // ============================================================================
-    // 1) CREATE TOURNAMENT (ORGANIZER)
-    // ============================================================================
-    public void createTournament(Tournament t) throws SQLException {
-        checkOrganizer();
-
-        t.setOrganizer(currentUser());
+    public void createTournament(User caller, Tournament t) throws SQLException {
+        requireLoggedIn(caller);
+        t.setOrganizer(caller);
         t.setStatus(TournamentStatus.PENDING);
-
         validateTournament(t);
-
         tournamentDAO.createTournament(t);
     }
 
     // ============================================================================
-    // BUSINESS VALIDATION
+    // 2) UPDATE TOURNAMENT (ONLY PENDING)
     // ============================================================================
-    private void validateTournament(Tournament t) {
-
-        if (t.getName() == null || t.getName().isBlank())
-            throw new IllegalArgumentException("Tournament name cannot be empty.");
-
-        if (t.getCapacity() <= 1)
-            throw new IllegalArgumentException("Capacity must be positive.");
-
-        if (t.getDeadline() == null || t.getStartDate() == null)
-            throw new IllegalArgumentException("Dates must not be null.");
-
-        if (t.getStartDate().isBefore(t.getDeadline()))
-            throw new IllegalArgumentException("Start date must be after the registration deadline.");
-
-        if (t.getStartDate().isBefore(LocalDate.now()))
-            throw new IllegalArgumentException("Start date cannot be in the past.");
-    }
-
-    // ============================================================================
-    // 2) UPDATE TOURNAMENT (ORGANIZER ONLY, ONLY PENDING)
-    // ============================================================================
-    public void updateTournament(Tournament updated) throws SQLException {
-        checkOrganizer();
-
+    public void updateTournament(User caller, Tournament updated) throws SQLException {
         Tournament existing = tournamentDAO.getTournamentById(updated.getTournamentId());
-        if (existing == null)
+        if (existing == null) {
             throw new IllegalArgumentException("Tournament not found.");
+        }
 
-        checkOrganizerOwnership(existing);
         checkTournamentIsPending(existing);
-
         validateTournament(updated);
-
         tournamentDAO.updateTournament(updated);
     }
 
     // ============================================================================
-    // 3) DELETE TOURNAMENT (Organizer only for own tournaments, Admin for all)
+    // 3) DELETE TOURNAMENT
     // ============================================================================
-    public void deleteTournament(int tournamentId) throws SQLException {
+    public void deleteTournament(User caller, int tournamentId) throws SQLException {
         Tournament t = tournamentDAO.getTournamentById(tournamentId);
-        if (t == null)
+        if (t == null) {
             throw new IllegalArgumentException("Tournament not found.");
-
-        User user = currentUser();
-
-        if (user.getRole() == Role.ADMIN) {
-            tournamentDAO.deleteTournament(tournamentId);
-            return;
         }
 
-        if (user.getRole() == Role.ORGANIZER &&
-                t.getOrganizer().getUserId() == user.getUserId()) {
-            tournamentDAO.deleteTournament(tournamentId);
-            return;
-        }
-
-        throw new SecurityException("You are not allowed to delete this tournament.");
+        tournamentDAO.deleteTournament(tournamentId);
     }
 
     // ============================================================================
-    // 4) APPROVE / REJECT (ADMIN)
+    // 4) APPROVE / REJECT
     // ============================================================================
-    public void approveTournament(int tournamentId) throws SQLException {
-        checkAdmin();
+    public void approveTournament(User caller, int tournamentId) throws SQLException {
         Tournament t = tournamentDAO.getTournamentById(tournamentId);
-
-        if (t.getStatus() != TournamentStatus.PENDING)
+        if (t.getStatus() != TournamentStatus.PENDING) {
             throw new IllegalStateException("Only PENDING tournaments can be approved.");
+        }
 
         attachObservers(t);
         t.setStatus(TournamentStatus.APPROVED);
         tournamentDAO.updateTournament(t);
     }
 
-    public void rejectTournament(int tournamentId) throws SQLException {
-        checkAdmin();
+    public void rejectTournament(User caller, int tournamentId) throws SQLException {
         Tournament t = tournamentDAO.getTournamentById(tournamentId);
-
-        if (t.getStatus() != TournamentStatus.PENDING)
+        if (t.getStatus() != TournamentStatus.PENDING) {
             throw new IllegalStateException("Only PENDING tournaments can be rejected.");
+        }
 
-        // Nessuna notifica quando un torneo viene rifiutato
         t.setStatus(TournamentStatus.REJECTED);
         tournamentDAO.updateTournament(t);
     }
@@ -173,22 +89,19 @@ public class TournamentService {
         List<Tournament> tournaments = tournamentDAO.getAllTournaments();
 
         for (Tournament t : tournaments) {
-
-            if (t.getStatus() == TournamentStatus.APPROVED &&
-                    LocalDate.now().isAfter(t.getDeadline())) {
+            if (t.getStatus() == TournamentStatus.APPROVED && LocalDate.now().isAfter(t.getDeadline())) {
                 attachObservers(t);
                 t.setStatus(TournamentStatus.READY);
                 tournamentDAO.updateTournament(t);
             }
 
-            if (t.getStatus() == TournamentStatus.READY &&
-                    LocalDate.now().isAfter(t.getStartDate())) {
+            if (t.getStatus() == TournamentStatus.READY && LocalDate.now().isAfter(t.getStartDate())) {
                 attachObservers(t);
                 t.setStatus(TournamentStatus.CLOSED);
                 tournamentDAO.updateTournament(t);
             }
 
-            if(t.getStatus() == TournamentStatus.APPROVED && t.isFull()){
+            if (t.getStatus() == TournamentStatus.APPROVED && t.isFull()) {
                 attachObservers(t);
                 t.setStatus(TournamentStatus.READY);
                 tournamentDAO.updateTournament(t);
@@ -197,36 +110,17 @@ public class TournamentService {
     }
 
     // ============================================================================
-    // 6) GETTERS (permissions vary)
+    // 6) GETTERS
     // ============================================================================
     public Tournament getTournamentById(int tournamentId) throws SQLException {
         return tournamentDAO.getTournamentById(tournamentId);
     }
 
-    public List<Tournament> getAllTournaments() throws SQLException {
-        User u = currentUser();
-
-        if (u.getRole() == Role.ADMIN)
-            return tournamentDAO.getAllTournaments();
-
-        if (u.getRole() == Role.ORGANIZER)
-            return tournamentDAO.getAllTournaments();
-
-        // Players can only see APPROVED or READY
-        return tournamentDAO.getAllTournaments()
-                .stream()
-                .filter(t -> t.getStatus() == TournamentStatus.APPROVED ||
-                        t.getStatus() == TournamentStatus.READY)
-                .toList();
+    public List<Tournament> getAllTournaments(User caller) throws SQLException {
+        return tournamentDAO.getAllTournaments();
     }
 
-    public List<Tournament> getTournamentsByOrganizer(int organizerId) throws SQLException {
-        User caller = currentUser();
-
-        if (caller.getRole() != Role.ADMIN &&
-                caller.getUserId() != organizerId)
-            throw new SecurityException("You can only view your own tournaments.");
-
+    public List<Tournament> getTournamentsByOrganizer(User caller, int organizerId) throws SQLException {
         return tournamentDAO.getAllTournaments()
                 .stream()
                 .filter(t -> t.getOrganizer().getUserId() == organizerId)
@@ -238,5 +132,47 @@ public class TournamentService {
                 .stream()
                 .filter(t -> t.getGameType() == gameType)
                 .toList();
+    }
+
+    // ============================================================================
+    // HELPERS
+    // ============================================================================
+    private void validateTournament(Tournament t) {
+        if (t.getName() == null || t.getName().isBlank()) {
+            throw new IllegalArgumentException("Tournament name cannot be empty.");
+        }
+        if (t.getCapacity() <= 1) {
+            throw new IllegalArgumentException("Capacity must be positive.");
+        }
+        if (t.getDeadline() == null || t.getStartDate() == null) {
+            throw new IllegalArgumentException("Dates must not be null.");
+        }
+        if (t.getStartDate().isBefore(t.getDeadline())) {
+            throw new IllegalArgumentException("Start date must be after the registration deadline.");
+        }
+        if (t.getStartDate().isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException("Start date cannot be in the past.");
+        }
+    }
+
+    private void attachObservers(Tournament t) {
+        if (t.getRegistrations() == null) {
+            return;
+        }
+        for (Registration r : t.getRegistrations()) {
+            t.addObserver(new UserObserver(r.getUser()));
+        }
+    }
+
+    private void checkTournamentIsPending(Tournament tournament) {
+        if (tournament.getStatus() != TournamentStatus.PENDING) {
+            throw new IllegalStateException("Tournament can only be edited when in PENDING state.");
+        }
+    }
+
+    private void requireLoggedIn(User caller) {
+        if (caller == null) {
+            throw new SecurityException("You must be logged in.");
+        }
     }
 }

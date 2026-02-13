@@ -1,24 +1,20 @@
 package BusinessLogic.card;
 
 import DomainModel.GameType;
-import DomainModel.card.*;
-import DomainModel.user.*;
-import BusinessLogic.session.UserSession;
-import ORM.dao.CardDAO;
-import ORM.dao.DeckDAO;
-
+import DomainModel.card.Card;
+import DomainModel.card.Deck;
 import DomainModel.card.factory.CardFactory;
 import DomainModel.card.factory.MagicCardFactory;
 import DomainModel.card.factory.PokemonCardFactory;
 import DomainModel.card.factory.YuGiOhCardFactory;
+import DomainModel.user.User;
+import ORM.dao.CardDAO;
+import ORM.dao.DeckDAO;
 
-import java.util.List;
 import java.sql.Connection;
 import java.sql.SQLException;
-/**
- * Service per la gestione dei Deck.
- * Applica logiche di controllo su ruoli e ownership.
- */
+import java.util.List;
+
 public class DeckService {
 
     private final DeckDAO deckDAO;
@@ -32,89 +28,52 @@ public class DeckService {
     // -------------------------------------------------------------
     // CRUD DECK
     // -------------------------------------------------------------
-
-    /**
-     * Crea un nuovo deck per lâ€™utente loggato.
-     */
-    public Deck createDeck(String deckName, GameType gameType) throws SQLException {
-        if (!UserSession.isLoggedIn()) {
-            throw new SecurityException("Devi essere loggato per creare un deck.");
-        }
+    public Deck createDeck(User caller, String deckName, GameType gameType) throws SQLException {
+        requireCaller(caller, "Owner non valido.");
 
         if (deckName == null || deckName.isBlank()) {
-            throw new IllegalArgumentException("Il nome del deck non può essere vuoto.");
+            throw new IllegalArgumentException("Il nome del deck non puo essere vuoto.");
         }
-
         if (gameType == null) {
-            throw new IllegalArgumentException("Il tipo di gioco non può essere nullo.");
+            throw new IllegalArgumentException("Il tipo di gioco non puo essere nullo.");
         }
 
-        User current = UserSession.getCurrentUser();
-
-        Deck deck = new Deck(deckName, current, gameType);
-
+        Deck deck = new Deck(deckName, caller, gameType);
         deckDAO.createDeck(deck);
         return deck;
     }
 
-    /**
-     * Restituisce tutti i deck dell'utente loggato.
-     */
-    public List<Deck> getMyDecks() throws SQLException {
-        if (!UserSession.isLoggedIn()) {
-            throw new SecurityException("Devi essere loggato.");
-        }
-        return deckDAO.getAllDecksByUser(UserSession.getUserId());
+    public List<Deck> getMyDecks(User caller) throws SQLException {
+        requireCaller(caller, "Owner non valido.");
+        return deckDAO.getAllDecksByUser(caller.getUserId());
     }
 
-    /*
-    * Restituisce tutti i deck di un certo GameType di un utente
-    * */
-    public List<Deck> getDecksByGameType(GameType gameType) throws SQLException {
-        if (!UserSession.isLoggedIn()) {
-            throw new SecurityException("Devi essere loggato.");
-        }
+    public List<Deck> getDecksByGameType(User caller, GameType gameType) throws SQLException {
         return deckDAO.getDecksByGameType(gameType);
     }
 
-
-    /**
-     * Restituisce un deck
-     */
     public Deck getDeckById(int deckId) throws SQLException {
         Deck deck = deckDAO.getDeckById(deckId);
-
         if (deck == null) {
             throw new IllegalArgumentException("Deck non trovato");
         }
-
         return deck;
     }
 
-    /**
-     * Modifica il nome del deck (solo owner o admin).
-     */
-    public void renameDeck(int deckId, String newName) throws SQLException {
+    public void renameDeck(User caller, int deckId, String newName) throws SQLException {
         Deck deck = getDeckById(deckId);
 
-        if (!isOwnerOrAdmin(deck.getOwner().getUserId())) {
-            throw new SecurityException("Non hai permessi per visualizzare questo deck.");
+        if (newName == null || newName.isBlank()) {
+            throw new IllegalArgumentException("Il nome del deck non puo essere vuoto.");
         }
-
-
-        if(newName == null || newName.isBlank()) {
-            throw new IllegalArgumentException("Il nome del deck non puÃ² essere vuoto.");
-        }
-
-        if(newName.equals(deck.getDeckName())) {
+        if (newName.equals(deck.getDeckName())) {
             throw new IllegalArgumentException("Il nuovo nome del deck deve essere diverso da quello attuale.");
         }
 
-        // Controlla che il nuovo nome non sia giÃ  usato dallo stesso utente per un altro deck
         List<Deck> userDecks = deckDAO.getAllDecksByUser(deck.getOwner().getUserId());
-        for(Deck d : userDecks) {
-            if(d.getDeckName().equals(newName) && d.getDeckId() != deckId) {
-                throw new IllegalArgumentException("Hai giÃ  un deck con questo nome.");
+        for (Deck d : userDecks) {
+            if (d.getDeckName().equals(newName) && d.getDeckId() != deckId) {
+                throw new IllegalArgumentException("Hai gia un deck con questo nome.");
             }
         }
 
@@ -122,41 +81,25 @@ public class DeckService {
         deckDAO.updateDeckName(deckId, newName);
     }
 
-    /**
-     * Cancella il deck (solo owner o admin).
-     */
-    public void deleteDeck(int deckId) throws SQLException {
-        Deck deck = getDeckById(deckId);
-
-        if (!isOwnerOrAdmin(deck.getOwner().getUserId())) {
-            throw new SecurityException("Non hai permessi per visualizzare questo deck.");
-        }
-
+    public void deleteDeck(User caller, int deckId) throws SQLException {
+        getDeckById(deckId);
         deckDAO.deleteDeck(deckId);
     }
 
     // -------------------------------------------------------------
     // GESTIONE CARTE NEL DECK
     // -------------------------------------------------------------
-
-    /**
-     * Aggiunge una carta al deck creando/riusando la carta via Factory (solo owner).
-     */
-    public void addCardToDeck(int deckId, String cardName) throws SQLException {
+    public void addCardToDeck(User caller, int deckId, String cardName) throws SQLException {
         Deck deck = getDeckById(deckId);
 
-        if (!isOwner(deck.getOwner().getUserId())) {
-            throw new SecurityException("Non hai permessi per modificare questo deck.");
-        }
-
         if (cardName == null || cardName.isBlank()) {
-            throw new IllegalArgumentException("Il nome della carta non puÃ² essere vuoto.");
+            throw new IllegalArgumentException("Il nome della carta non puo essere vuoto.");
         }
 
         Card existing = cardDAO.getCardByName(cardName);
         if (existing != null) {
             if (existing.getType() != deck.getGameType()) {
-                throw new IllegalArgumentException("La carta non Ã¨ compatibile con il tipo di gioco del deck.");
+                throw new IllegalArgumentException("La carta non e compatibile con il tipo di gioco del deck.");
             }
             deckDAO.addCardToDeck(deckId, existing.getCardId());
             return;
@@ -167,7 +110,16 @@ public class DeckService {
         deckDAO.addCardToDeck(deckId, card.getCardId());
     }
 
-    /* UTIL per creazione carte */
+    public void removeCardFromDeck(User caller, int deckId, int cardId) throws SQLException {
+        getDeckById(deckId);
+        deckDAO.removeCardFromDeck(deckId, cardId);
+    }
+
+    public List<Card> getCardsInDeck(int deckId) throws SQLException {
+        getDeckById(deckId);
+        return deckDAO.findCardsByDeck(deckId);
+    }
+
     private Card createCardViaFactory(String name, GameType type) {
         CardFactory factory;
         switch (type) {
@@ -186,38 +138,9 @@ public class DeckService {
         return factory.createCard(name);
     }
 
-    /**
-     * Rimuove una carta da un deck (solo owner o admin).
-     */
-    public void removeCardFromDeck(int deckId, int cardId) throws SQLException {
-        Deck deck = getDeckById(deckId);
-
-        if (!isOwnerOrAdmin(deck.getOwner().getUserId())) {
-            throw new SecurityException("Non hai permessi per visualizzare questo deck.");
+    private void requireCaller(User caller, String message) {
+        if (caller == null) {
+            throw new SecurityException(message);
         }
-
-        deckDAO.removeCardFromDeck(deckId, cardId);
-    }
-
-    /**
-     * Ottiene tutte le carte presenti nel deck.
-     */
-    public List<Card> getCardsInDeck(int deckId) throws SQLException {
-        Deck deck = getDeckById(deckId);
-        return deckDAO.findCardsByDeck(deckId);
-    }
-
-    // -------------------------------------------------------------
-    // METODI DI SUPPORTO
-    // -------------------------------------------------------------
-
-    private boolean isOwnerOrAdmin(int ownerUserId) {
-        int loggedId = UserSession.getUserId();
-        return loggedId == ownerUserId || UserSession.isAdmin();
-    }
-
-    private boolean isOwner(int ownerUserId) {
-        int loggedId = UserSession.getUserId();
-        return loggedId == ownerUserId;
     }
 }

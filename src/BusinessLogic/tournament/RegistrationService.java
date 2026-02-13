@@ -1,10 +1,11 @@
 package BusinessLogic.tournament;
 
+import DomainModel.tournament.Registration;
+import DomainModel.tournament.Tournament;
+import DomainModel.tournament.TournamentStatus;
+import DomainModel.user.User;
 import ORM.dao.RegistrationDAO;
 import ORM.dao.TournamentDAO;
-import DomainModel.tournament.*;
-import DomainModel.user.*;
-import BusinessLogic.session.UserSession;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -22,162 +23,114 @@ public class RegistrationService {
     }
 
     // ====================================================================================
-    // SECURITY HELPERS
+    // 1) REGISTER USER TO TOURNAMENT
     // ====================================================================================
-    private User currentUser() {
-        User u = UserSession.getInstance().getCurrentUser();
-        if (u == null)
-            throw new SecurityException("You must be logged in.");
-        return u;
-    }
-
-    private void checkPlayerPermission() {
-        if (currentUser().getRole() != Role.PLAYER)
-            throw new SecurityException("Only a PLAYER can register to tournaments.");
-    }
-
-    private void checkAdminPermission() {
-        if (currentUser().getRole() != Role.ADMIN)
-            throw new SecurityException("Only ADMIN can perform this action.");
-    }
-
-    private void checkOrganizerPermission(Tournament tournament) {
-        User u = currentUser();
-        if (u.getRole() != Role.ORGANIZER || tournament.getOrganizer().getUserId() != u.getUserId())
-            throw new SecurityException("Only the tournament organizer can perform this action.");
-    }
-
-    // ====================================================================================
-    // BUSINESS LOGIC VALIDATION
-    // ====================================================================================
-    private void validateRegistrationRules(Tournament t, User u, Registration r) throws SQLException {
-
-        if (t.getStatus() != TournamentStatus.APPROVED)
-            throw new IllegalStateException("Tournament is not open for registration.");
-
-        if (registrationDAO.isUserRegistered(t.getTournamentId(), u.getUserId()))
-            throw new IllegalStateException("User already registered.");
-
-        if (t.isFull())
-            throw new IllegalStateException("Tournament capacity reached.");
-
-        if (!t.isRegistrationOpen())
-            throw new IllegalStateException("Registration deadline has passed.");
-
-        if(r.getRegDeck().getGameType() != t.getGameType())
-            throw new IllegalArgumentException("Deck game type does not match tournament game type.");
-    }
-
-    // ====================================================================================
-    // 1) REGISTER USER TO TOURNAMENT (PLAYER)
-    // ====================================================================================
-    public void registerUserToTournament(int tournamentId, Registration reg) throws SQLException {
-        checkPlayerPermission();
-        User user = currentUser();
+    public void registerUserToTournament(User caller, int tournamentId, Registration reg) throws SQLException {
+        requireLoggedIn(caller);
 
         Tournament tournament = tournamentDAO.getTournamentById(tournamentId);
-        if (tournament == null)
+        if (tournament == null) {
             throw new IllegalArgumentException("Tournament not found");
+        }
 
-        validateRegistrationRules(tournament, user, reg);
-
-        //Registration registration = new Registration(tournament, user);
+        validateRegistrationRules(tournament, caller, reg);
         reg.setRegistrationDate(LocalDateTime.now());
-
         registrationDAO.createRegistration(reg);
     }
-    // ====================================================================================
-    // 2) CANCEL REGISTRATION
-    // ====================================================================================
-    public void unregisterFromTournament(int tournamentId) throws SQLException {
-        User user = currentUser();
 
-        Tournament t = tournamentDAO.getTournamentById(tournamentId);
-        if (t == null)
+    // ====================================================================================
+    // 2) CANCEL REGISTRATION (SELF)
+    // ====================================================================================
+    public void unregisterFromTournament(User caller, int tournamentId) throws SQLException {
+        requireLoggedIn(caller);
+
+        Tournament tournament = tournamentDAO.getTournamentById(tournamentId);
+        if (tournament == null) {
             throw new IllegalArgumentException("Tournament not found");
-
-        boolean registered = registrationDAO.isUserRegistered(tournamentId, user.getUserId());
-        if (!registered)
-            throw new IllegalStateException("User is not registered.");
-
-        // PLAYER → può cancellare solo le sue registrazioni
-        if (user.getRole() == Role.PLAYER) {
-            registrationDAO.deleteRegistration(tournamentId, user.getUserId());
-            return;
         }
 
-        throw new SecurityException("You cannot remove this registration.");
+        boolean registered = registrationDAO.isUserRegistered(tournamentId, caller.getUserId());
+        if (!registered) {
+            throw new IllegalStateException("User is not registered.");
+        }
+
+        registrationDAO.deleteRegistration(tournamentId, caller.getUserId());
     }
 
     // ====================================================================================
-    // 2a) CANCEL REGISTRATION (ORGANIZER & ADMIN ONLY)
+    // 2a) CANCEL REGISTRATION (TARGET USER)
     // ====================================================================================
-    public void unregisterUserFromTournament(int tournamentId, int userId) throws SQLException {
-        User caller = currentUser();
+    public void unregisterUserFromTournament(User caller, int tournamentId, int userId) throws SQLException {
+        requireLoggedIn(caller);
 
-        Tournament t = tournamentDAO.getTournamentById(tournamentId);
-        if (t == null)
+        Tournament tournament = tournamentDAO.getTournamentById(tournamentId);
+        if (tournament == null) {
             throw new IllegalArgumentException("Tournament not found");
+        }
 
         boolean registered = registrationDAO.isUserRegistered(tournamentId, userId);
-        if (!registered)
+        if (!registered) {
             throw new IllegalStateException("User is not registered.");
-
-        // ORGANIZER → può rimuovere gli utenti dal suo torneo
-        if (caller.getRole() == Role.ORGANIZER &&
-                t.getOrganizer().getUserId() == caller.getUserId()) {
-            registrationDAO.deleteRegistration(tournamentId, userId);
-            return;
         }
 
-        // ADMIN → può fare tutto
-        if (caller.getRole() == Role.ADMIN) {
-            registrationDAO.deleteRegistration(tournamentId, userId);
-            return;
-        }
-
-        throw new SecurityException("You cannot remove this registration.");
+        registrationDAO.deleteRegistration(tournamentId, userId);
     }
 
     // ====================================================================================
-    // 3) GET REGISTRATIONS BY USER (everyone, only their own unless admin)
+    // 3) GET REGISTRATIONS BY USER
     // ====================================================================================
-    public List<Registration> getRegistrationsByUser(int userId) throws SQLException {
-        User caller = currentUser();
-
-        if (caller.getRole() != Role.ADMIN && caller.getUserId() != userId)
-            throw new SecurityException("You can only view your own registrations.");
-
+    public List<Registration> getRegistrationsByUser(User caller, int userId) throws SQLException {
+        requireLoggedIn(caller);
         return registrationDAO.getRegistrationsByUser(userId);
     }
 
     // ====================================================================================
     // 4) GET REGISTRATIONS BY TOURNAMENT
     // ====================================================================================
-    public List<Registration> getRegistrationsByTournament(int tournamentId) throws SQLException {
-        Tournament t = tournamentDAO.getTournamentById(tournamentId);
-        if (t == null)
+    public List<Registration> getRegistrationsByTournament(User caller, int tournamentId) throws SQLException {
+        requireLoggedIn(caller);
+
+        Tournament tournament = tournamentDAO.getTournamentById(tournamentId);
+        if (tournament == null) {
             throw new IllegalArgumentException("Tournament not found");
-
-        User caller = currentUser();
-
-        // Organizer can only view their own tournaments
-        if (caller.getRole() == Role.ORGANIZER &&
-                t.getOrganizer().getUserId() != caller.getUserId())
-            throw new SecurityException("You can only view registrations for your tournaments.");
-
-        // Players cannot access this
-        if (caller.getRole() == Role.PLAYER)
-            throw new SecurityException("Players cannot view tournament registrations.");
+        }
 
         return registrationDAO.getRegistrationsByTournament(tournamentId);
     }
 
     // ====================================================================================
-    // 5) GET ALL REGISTRATIONS (ADMIN)
+    // 5) GET ALL REGISTRATIONS
     // ====================================================================================
-    public List<Registration> getAllRegistrations() throws SQLException {
-        checkAdminPermission();
+    public List<Registration> getAllRegistrations(User caller) throws SQLException {
+        requireLoggedIn(caller);
         return registrationDAO.getAllRegistrations();
+    }
+
+    // ====================================================================================
+    // HELPERS
+    // ====================================================================================
+    private void validateRegistrationRules(Tournament tournament, User caller, Registration registration)
+            throws SQLException {
+        if (tournament.getStatus() != TournamentStatus.APPROVED) {
+            throw new IllegalStateException("Tournament is not open for registration.");
+        }
+        if (registrationDAO.isUserRegistered(tournament.getTournamentId(), caller.getUserId())) {
+            throw new IllegalStateException("User already registered.");
+        }
+        if (tournament.isFull()) {
+            throw new IllegalStateException("Tournament capacity reached.");
+        }
+        if (!tournament.isRegistrationOpen()) {
+            throw new IllegalStateException("Registration deadline has passed.");
+        }
+        if (registration.getRegDeck().getGameType() != tournament.getGameType()) {
+            throw new IllegalArgumentException("Deck game type does not match tournament game type.");
+        }
+    }
+
+    private void requireLoggedIn(User caller) {
+        if (caller == null) {
+            throw new SecurityException("You must be logged in.");
+        }
     }
 }

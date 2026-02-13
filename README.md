@@ -28,7 +28,15 @@ Questo perchè durante lo sviluppo della CLI potrebbero venirci in mente nuove f
 e quindi è importante assicurarsi che tutto funzioni come previsto dopo ogni modifica.
 Specialmente per i test della BusinessLogic.
 
-##TODO
+##TODO CODICE
 - Correggere comportamenti errati nella CLI con messaggi di errore più chiari.
 - Modifica Use Case Diagram con le nuove funzioni aggiunte nel main
+-----------------------------------------------------------------------------------
+- Rinominare il package `business_logic` in `services`
+- Creare package `controllers` per gestire le interazioni tra la CLI e i servizi.
+  - controllers avrà una classe per ogni tipo di menù della CLI (admin, player, organizer)
+- DatabaseConnection: implementare un singleton per gestire la connessione al database in modo efficiente e sicuro.
+- Testare DomainModel 
 - 
+
+##TODO DOCUMENTAZIONE

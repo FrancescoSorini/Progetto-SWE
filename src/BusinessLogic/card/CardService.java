@@ -1,15 +1,13 @@
 package BusinessLogic.card;
 
-import ORM.dao.CardDAO;
-import DomainModel.card.Card;
-import DomainModel.user.*;
 import DomainModel.GameType;
-import BusinessLogic.session.UserSession;
-
+import DomainModel.card.Card;
 import DomainModel.card.factory.CardFactory;
 import DomainModel.card.factory.MagicCardFactory;
 import DomainModel.card.factory.PokemonCardFactory;
 import DomainModel.card.factory.YuGiOhCardFactory;
+import DomainModel.user.User;
+import ORM.dao.CardDAO;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -24,35 +22,19 @@ public class CardService {
     }
 
     // ====================================================================================
-    // SECURITY CHECK: solo admin può modificare il catalogo
+    // 1. CREATE CARD - via Factory
     // ====================================================================================
-    private void checkAdminPermission() {
-        User current = UserSession.getInstance().getCurrentUser();
-
-        if (current == null)
-            throw new SecurityException("You must be logged in to perform this action.");
-
-        if (current.getRole() != Role.ADMIN)
-            throw new SecurityException("Only administrators can modify the card catalog.");
-    }
-
-    // ====================================================================================
-    // 1. CREATE CARD (Admin only) - via Factory
-    // ====================================================================================
-    public void createCard(Card card) throws SQLException {
+    public void createCard(User caller, Card card) throws SQLException {
         createCardViaFactory(card.getName(), card.getType());
     }
 
     private void createCardViaFactory(String name, GameType type) throws SQLException {
-        checkAdminPermission();
-
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("Card name cannot be empty.");
         }
         if (type == null) {
             throw new IllegalArgumentException("Card type must be provided.");
         }
-
         if (isDuplicate(name)) {
             throw new IllegalArgumentException("A card with this name already exists.");
         }
@@ -74,7 +56,6 @@ public class CardService {
 
         Card card = factory.createCard(name);
         validateCard(card);
-
         cardDAO.addCard(card);
     }
 
@@ -93,24 +74,20 @@ public class CardService {
     }
 
     // ====================================================================================
-    // 4. SEARCH CARDS BY NAME (everyone) #TODO: Testing
+    // 4. SEARCH CARDS BY NAME (everyone)
     // ====================================================================================
     public List<Card> searchCardsByName(GameType gameType, String keyword) throws SQLException {
-
         if (keyword == null || keyword.isBlank()) {
             throw new IllegalArgumentException("Nome non valido");
         }
 
         List<Card> allCards = cardDAO.getCardsByGameType(gameType);
-
         String lowerKeyword = keyword.toLowerCase();
 
         return allCards.stream()
-                .filter(card ->
-                        card.getName().toLowerCase().contains(lowerKeyword))
+                .filter(card -> card.getName().toLowerCase().contains(lowerKeyword))
                 .toList();
     }
-
 
     // ====================================================================================
     // 5. GET CARDS BY GAMETYPE (everyone)
@@ -123,11 +100,9 @@ public class CardService {
     }
 
     // ====================================================================================
-    // 6. UPDATE CARD NAME (Admin)
+    // 6. UPDATE CARD NAME
     // ====================================================================================
-    public void updateCardName(int cardId, String newName) throws SQLException {
-        checkAdminPermission();
-
+    public void updateCardName(User caller, int cardId, String newName) throws SQLException {
         if (newName == null || newName.isBlank()) {
             throw new IllegalArgumentException("Card name cannot be empty.");
         }
@@ -136,49 +111,40 @@ public class CardService {
         }
 
         Card target = cardDAO.getCardById(cardId);
-
         if (target == null) {
             throw new IllegalArgumentException("Card with ID " + cardId + " does not exist.");
         }
 
         target.setCardName(newName);
-
         cardDAO.updateCard(target);
-
     }
 
     // ====================================================================================
-    // 7. UPDATE CARD TYPE (Admin)
+    // 7. UPDATE CARD TYPE
     // ====================================================================================
-    public void updateCardType(int cardId, GameType newType) throws SQLException {
-        checkAdminPermission();
-
+    public void updateCardType(User caller, int cardId, GameType newType) throws SQLException {
         if (newType == null) {
             throw new IllegalArgumentException("Card type cannot be null.");
         }
 
         Card target = cardDAO.getCardById(cardId);
-
         if (target == null) {
             throw new IllegalArgumentException("Card with ID " + cardId + " does not exist.");
         }
 
         target.setCardType(newType);
-
         cardDAO.updateCard(target);
-
     }
 
     // ====================================================================================
-    // 8. DELETE CARD (Admin)
+    // 8. DELETE CARD
     // ====================================================================================
-    public void deleteCard(int cardId) throws SQLException {
-        checkAdminPermission();
+    public void deleteCard(User caller, int cardId) throws SQLException {
         cardDAO.deleteCard(cardId);
     }
 
     // ====================================================================================
-    // 9. UTILITIES: VALIDAZIONE
+    // 9. UTILITIES
     // ====================================================================================
     private void validateCard(Card card) {
         if (card.getName() == null || card.getName().isBlank()) {
@@ -189,9 +155,6 @@ public class CardService {
         }
     }
 
-    // ====================================================================================
-    // 10. UTILITIES: DUPLICATI
-    // ====================================================================================
     public boolean isDuplicate(String name) throws SQLException {
         Card existing = cardDAO.getCardByName(name);
         return existing != null;

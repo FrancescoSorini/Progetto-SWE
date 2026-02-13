@@ -1,17 +1,16 @@
-package BusinessLogic.session;
+package Controllers.session;
 
-import DomainModel.user.User;
 import DomainModel.GameType;
+import DomainModel.user.User;
 
 public class UserSession {
 
     private static UserSession instance;
     private static User currentUser;
-    private GameType currentGameType;   // <-- NUOVO CAMPO
+    private GameType currentGameType;
 
     private UserSession() {}
 
-    // Singleton
     public static UserSession getInstance() {
         if (instance == null) {
             instance = new UserSession();
@@ -19,14 +18,12 @@ public class UserSession {
         return instance;
     }
 
-    // ---- Gestione sessione ----
-
     public void login(User user) {
-        this.currentUser = user;
+        currentUser = user;
     }
 
     public void logout() {
-        this.currentUser = null;
+        currentUser = null;
     }
 
     public static boolean isLoggedIn() {
@@ -49,9 +46,8 @@ public class UserSession {
         return (currentUser != null) ? currentUser.getEmail() : null;
     }
 
-    // ---- Gestione GameType ----
     public void setGameType(GameType gameType) {
-        this.currentGameType = gameType;
+        currentGameType = gameType;
     }
 
     public GameType getGameType() {
@@ -62,7 +58,6 @@ public class UserSession {
         return currentGameType != null;
     }
 
-    // ---- Controlli ruolo ----
     public static boolean isAdmin() {
         return isLoggedIn() && currentUser.getRole().name().equals("ADMIN");
     }
@@ -75,4 +70,3 @@ public class UserSession {
         return isLoggedIn() && currentUser.getRole().name().equals("PLAYER");
     }
 }
-

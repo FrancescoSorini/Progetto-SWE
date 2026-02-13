@@ -1,9 +1,8 @@
 package BusinessLogic.user;
 
-import ORM.dao.UserDAO;
 import DomainModel.user.Role;
 import DomainModel.user.User;
-import BusinessLogic.session.UserSession;
+import ORM.dao.UserDAO;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -21,24 +20,20 @@ public class UserService {
     // 1) REGISTRAZIONE UTENTE
     // ============================================================
     public User registerUser(String username, String email, String password) throws SQLException {
-
-        // Validazioni di business
-        if (username == null || username.isBlank())
+        if (username == null || username.isBlank()) {
             throw new IllegalArgumentException("Username non valido");
-
-        if (email == null || !email.contains("@"))
+        }
+        if (email == null || !email.contains("@")) {
             throw new IllegalArgumentException("Email non valida");
-
-        if (password == null || password.length() < 4)
+        }
+        if (password == null || password.length() < 4) {
             throw new IllegalArgumentException("Password troppo corta");
+        }
+        if (userDAO.getUserByUsername(username) != null) {
+            throw new IllegalStateException("Username gia esistente");
+        }
 
-        // Controlla se username esiste già
-        if (userDAO.getUserByUsername(username) != null)
-            throw new IllegalStateException("Username già esistente");
-
-        // Crea l’utente
         User user = new User(username, email, password, true, Role.PLAYER);
-
         userDAO.createUser(user);
         return user;
     }
@@ -47,21 +42,16 @@ public class UserService {
     // 2) LOGIN UTENTE
     // ============================================================
     public User login(String username, String password) throws SQLException {
-
-        // 1) Recupero dello user tramite username
         User user = userDAO.getUserByUsername(username);
-
-        // 2) Se non esiste, login fallito
         if (user == null) {
             return null;
         }
-
-        // 3) Confronto credenziali FIX PER TEST
-        if (!user.isEnabled()) return null;
-        if (!user.getPassword().equals(password)) return null;
-
-
-        // 4) Login riuscito
+        if (!user.isEnabled()) {
+            return null;
+        }
+        if (!user.getPassword().equals(password)) {
+            return null;
+        }
         return user;
     }
 
@@ -69,15 +59,14 @@ public class UserService {
     // 3) CAMBIO USERNAME
     // ============================================================
     public void changeUsername(int userId, String newUsername) throws SQLException {
-
-        if (newUsername == null || newUsername.isBlank())
+        if (newUsername == null || newUsername.isBlank()) {
             throw new IllegalArgumentException("Nuovo username non valido");
+        }
 
-        // Controlla se esiste già FIXATO PER TEST
         User existing = userDAO.getUserByUsername(newUsername);
-        if (existing != null && existing.getUserId() != userId)
-            throw new IllegalStateException("Username già in uso");
-
+        if (existing != null && existing.getUserId() != userId) {
+            throw new IllegalStateException("Username gia in uso");
+        }
 
         userDAO.updateUsername(userId, newUsername);
     }
@@ -86,10 +75,9 @@ public class UserService {
     // 4) CAMBIO EMAIL
     // ============================================================
     public void changeEmail(int userId, String newEmail) throws SQLException {
-
-        if (newEmail == null || !newEmail.contains("@"))
+        if (newEmail == null || !newEmail.contains("@")) {
             throw new IllegalArgumentException("Email non valida");
-
+        }
         userDAO.updateEmail(userId, newEmail);
     }
 
@@ -97,127 +85,59 @@ public class UserService {
     // 5) CAMBIO PASSWORD
     // ============================================================
     public void changePassword(int userId, String newPassword) throws SQLException {
-
-        if (newPassword == null || newPassword.length() < 4)
+        if (newPassword == null || newPassword.length() < 4) {
             throw new IllegalArgumentException("Password non valida");
-
+        }
         userDAO.updatePassword(userId, newPassword);
     }
 
     // ============================================================
-    // 6) CAMBIO RUOLO (solo admin)
+    // 6) CAMBIO RUOLO
     // ============================================================
-    public void changeUserRole(int targetUserId, Role newRole) throws SQLException {
-
-        // ottieni l’utente attualmente loggato
-        User caller = UserSession.getInstance().getCurrentUser();
-
-        if (caller == null) {
-            throw new SecurityException("Nessun utente loggato");
-        }
-
-        if (caller.getRole() != Role.ADMIN) {
-            throw new SecurityException("Solo gli admin possono modificare i ruoli");
-        }
-
-        // Esegui update
+    public void changeUserRole(User caller, int targetUserId, Role newRole) throws SQLException {
         userDAO.updateUserRole(targetUserId, newRole);
     }
 
     // ============================================================
     // 7) DISABILITAZIONE / RIABILITAZIONE ACCOUNT
     // ============================================================
-    public void setUserEnabled(int userId, boolean enabled) throws SQLException {
-        // ottieni l’utente attualmente loggato
-        User caller = UserSession.getInstance().getCurrentUser();
-
-        if (caller == null) {
-            throw new SecurityException("Nessun utente loggato");
-        }
-
-        if (caller.getRole() != Role.ADMIN) {
-            throw new SecurityException("Solo gli admin possono modificare i ruoli");
-        }
-
-        //Esegui update
+    public void setUserEnabled(User caller, int userId, boolean enabled) throws SQLException {
         userDAO.updateUserEnabled(userId, enabled);
     }
 
     // ============================================================
-    // 8) RECUPERO SINGOLO UTENTE (serve?)
+    // 8) RECUPERO SINGOLO UTENTE
     // ============================================================
     public User getUser(int userId) throws SQLException {
         return userDAO.getUserById(userId);
     }
 
     // ============================================================
-    // 8.1) RECUPERO UTENTI By Name CON FUZZY SEARCH #TODO: Testing
+    // 8.1) RECUPERO UTENTI By Name CON FUZZY SEARCH
     // ============================================================
     public List<User> searchUsersByName(String keyword) throws SQLException {
-
         if (keyword == null || keyword.isBlank()) {
             throw new IllegalArgumentException("Nome non valido");
         }
 
         List<User> allUsers = userDAO.getAllUsers();
-
         return allUsers.stream()
                 .filter(u -> u.getUsername().toLowerCase().contains(keyword.toLowerCase()))
                 .toList();
-
     }
 
-
     // ============================================================
-    // 9) RECUPERO TUTTI GLI UTENTI (solo admin)
+    // 9) RECUPERO TUTTI GLI UTENTI
     // ============================================================
-    public List<User> getAllUsers() throws SQLException {
-        // ottieni l’utente attualmente loggato
-        User caller = UserSession.getInstance().getCurrentUser();
-
-        if (caller == null) {
-            throw new SecurityException("Nessun utente loggato");
-        }
-
-        if (caller.getRole() != Role.ADMIN) {
-            throw new SecurityException("Solo gli admin possono modificare i ruoli");
-        }
-
-        // Esegui recupero
+    public List<User> getAllUsers(User caller) throws SQLException {
         return userDAO.getAllUsers();
     }
+
 
     // ============================================================
     // 10) CANCELLAZIONE UTENTE
     // ============================================================
-    public void deleteUser(int targetUserId) throws SQLException {
-
-        UserSession session = UserSession.getInstance();
-        User caller = session.getCurrentUser();
-
-        if (caller == null) {
-            throw new SecurityException("Nessun utente loggato.");
-        }
-
-        int callerId = caller.getUserId();
-        boolean callerIsAdmin = caller.getRole() == Role.ADMIN;
-
-        // CASO 1: L'utente vuole cancellare se stesso → SEMPRE PERMESSO
-        if (callerId == targetUserId) {
-            userDAO.deleteUser(targetUserId);
-            session.logout(); // opzionale: logout automatico dopo self-delete
-            return;
-        }
-
-        // CASO 2: Un admin vuole cancellare un altro utente → PERMESSO
-        if (callerIsAdmin) {
-            userDAO.deleteUser(targetUserId);
-            return;
-        }
-
-        // CASO 3: Utente normale vuole cancellare un altro utente → BLOCCATO
-        throw new SecurityException("Non hai i permessi per cancellare altri utenti.");
+    public void deleteUser(User caller, int targetUserId) throws SQLException {
+        userDAO.deleteUser(targetUserId);
     }
-
 }
-
