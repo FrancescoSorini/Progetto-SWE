@@ -1,4 +1,4 @@
-package BusinessLogic.user;
+package Services.user;
 
 import DomainModel.user.Role;
 import DomainModel.user.User;
@@ -95,7 +95,14 @@ public class UserService {
     // 6) CAMBIO RUOLO
     // ============================================================
     public void changeUserRole(User caller, int targetUserId, Role newRole) throws SQLException {
+        User userTarget = getUser(targetUserId);
+
+        if (userTarget.getRole() == Role.ADMIN){
+            throw new IllegalArgumentException("Non puoi declassare un admin");
+        }
+        else {
         userDAO.updateUserRole(targetUserId, newRole);
+        }
     }
 
     // ============================================================

@@ -62,6 +62,7 @@ public class User {
             System.out.println("Username: " + user.getUsername());
             System.out.println("Email: " + user.getEmail());
             System.out.println("Ruolo: " + user.getRole());
+            System.out.println("Stato: " + (user.isEnabled() ? "Abilitato" : "Bannato"));
         }
     }
 

@@ -1,4 +1,4 @@
-package BusinessLogic.tournament;
+package Services.tournament;
 
 import DomainModel.tournament.Registration;
 import DomainModel.tournament.Tournament;

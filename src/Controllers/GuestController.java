@@ -1,7 +1,7 @@
 package Controllers;
 
 import Controllers.session.UserSession;
-import BusinessLogic.user.UserService;
+import Services.user.UserService;
 import DomainModel.GameType;
 import DomainModel.user.User;
 

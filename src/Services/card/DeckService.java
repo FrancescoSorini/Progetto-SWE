@@ -1,4 +1,4 @@
-package BusinessLogic.card;
+package Services.card;
 
 import DomainModel.GameType;
 import DomainModel.card.Card;

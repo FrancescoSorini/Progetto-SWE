@@ -32,6 +32,17 @@ public class Tournament extends TournamentSubject {
         this.status = TournamentStatus.PENDING;
     }
 
+    public Tournament(String name, String description, User organizer, int capacity, LocalDate deadline, LocalDate startDate, GameType gameType) {
+        this.tournamentName = name;
+        this.description = description;
+        this.organizer = organizer;
+        this.capacity = capacity;
+        this.deadline = deadline;
+        this.startDate = startDate;
+        this.gameType = gameType;
+        this.status = TournamentStatus.PENDING;
+    }
+
     // GETTER
     public int getTournamentId() { return tournamentId; }
     public String getName() { return tournamentName; }
@@ -81,6 +92,27 @@ public class Tournament extends TournamentSubject {
 
     public boolean isStarted() {
         return LocalDate.now().isAfter(startDate);
+    }
+
+    public void printTournamentInfo(List<Tournament> tournaments){
+        if (tournaments.isEmpty()) {
+            System.out.println("Nessun torneo trovato.");
+            return;
+        }
+
+        for (Tournament t : tournaments) {
+            System.out.println("----------------------");
+            System.out.println("ID: " + t.getTournamentId());
+            System.out.println("Nome: " + t.getName());
+            System.out.println("Descrizione: " + t.getDescription());
+            System.out.println("Organizzatore: " + t.getOrganizer().getUsername());
+            System.out.println("Capacità: " + t.getCapacity());
+            System.out.println("Iscrizioni: " + t.getRegistrations().size());
+            System.out.println("Deadline iscrizioni: " + t.getDeadline());
+            System.out.println("Data inizio: " + t.getStartDate());
+            System.out.println("Stato: " + t.getStatus());
+            System.out.println("Gioco: " + t.getGameType());
+        }
     }
 
 }

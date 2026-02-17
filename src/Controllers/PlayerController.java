@@ -1,6 +1,6 @@
 package Controllers;
 
-import BusinessLogic.card.CardService;
+import Services.card.CardService;
 import Controllers.security.ControllerGuards;
 import Controllers.session.UserSession;
 import DomainModel.GameType;

@@ -26,17 +26,15 @@ Stiamo sviluppando l'interfaccia CLI per far funzionare l'applicazione.
 Dobbiamo rifare i test, una volta che l'interfaccia sarà pronta, per verificare che tutte le funzionalità siano correttamente implementate e funzionanti.
 Questo perchè durante lo sviluppo della CLI potrebbero venirci in mente nuove funzionilità da aggiungere o modificare, 
 e quindi è importante assicurarsi che tutto funzioni come previsto dopo ogni modifica.
-Specialmente per i test della BusinessLogic.
+Specialmente per i test della Services.
 
-##TODO CODICE
+## TODO CODICE
 - Correggere comportamenti errati nella CLI con messaggi di errore più chiari.
+- Rimuovi scelta gametype da creazione torneo, in quanto si sceglie il game type al login
+- Implementa rimozione torneo rejected dal db 
 - Modifica Use Case Diagram con le nuove funzioni aggiunte nel main
 -----------------------------------------------------------------------------------
-- Rinominare il package `business_logic` in `services`
-- Creare package `controllers` per gestire le interazioni tra la CLI e i servizi.
-  - controllers avrà una classe per ogni tipo di menù della CLI (admin, player, organizer)
-- DatabaseConnection: implementare un singleton per gestire la connessione al database in modo efficiente e sicuro.
-- Testare DomainModel 
-- 
+- Testare DomainModel, Services e Controllers
 
-##TODO DOCUMENTAZIONE
+## TODO DOCUMENTAZIONE
+- DatabaseConnection: esplicitare l'uso del singleton per gestire la connessione al database in modo efficiente e sicuro.

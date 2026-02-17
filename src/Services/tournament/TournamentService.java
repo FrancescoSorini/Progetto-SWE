@@ -1,4 +1,4 @@
-package BusinessLogic.tournament;
+package Services.tournament;
 
 import DomainModel.GameType;
 import DomainModel.tournament.Registration;
@@ -131,6 +131,27 @@ public class TournamentService {
         return tournamentDAO.getAllTournaments()
                 .stream()
                 .filter(t -> t.getGameType() == gameType)
+                .toList();
+    }
+
+    public List<Tournament> getTournamentsByStatus(TournamentStatus status) throws SQLException {
+        return tournamentDAO.getAllTournaments()
+                .stream()
+                .filter(t -> t.getStatus() == status)
+                .toList();
+    }
+
+    public List<Tournament> getPendingTournaments() throws SQLException {
+        return tournamentDAO.getAllTournaments()
+                .stream()
+                .filter(t -> t.getStatus() == TournamentStatus.PENDING)
+                .toList();
+    }
+
+    public List<Tournament> getApprovedTournaments() throws SQLException {
+        return tournamentDAO.getAllTournaments()
+                .stream()
+                .filter(t -> t.getStatus() == TournamentStatus.APPROVED)
                 .toList();
     }
 
