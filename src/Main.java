@@ -1,4 +1,6 @@
 import Services.card.CardService;
+import Services.card.DeckService;
+import Services.tournament.RegistrationService;
 import Services.tournament.TournamentService;
 import Services.user.UserService;
 import Controllers.AdminController;
@@ -15,11 +17,15 @@ public class Main {
     private static final Scanner scanner = new Scanner(System.in);
     private static final UserService userService = new UserService(DatabaseConnection.getConnection());
     private static final CardService cardService = new CardService(DatabaseConnection.getConnection());
+    private static final DeckService deckService = new DeckService(DatabaseConnection.getConnection());
     private static final TournamentService tournamentService = new TournamentService(DatabaseConnection.getConnection());
+    private static final RegistrationService registrationService = new RegistrationService(DatabaseConnection.getConnection());
 
     public static void main(String[] args) {
-        PlayerController playerController = new PlayerController(scanner, cardService);
-        AdminController adminController = new AdminController(scanner, userService, tournamentService);
+        PlayerController playerController = new PlayerController(
+                scanner, cardService, deckService, tournamentService, registrationService
+        );
+        AdminController adminController = new AdminController(scanner, userService, cardService, tournamentService);
         OrganizerController organizerController = new OrganizerController(scanner, tournamentService);
         RoleMenuController roleMenuController =
                 new RoleMenuController(playerController, adminController, organizerController);

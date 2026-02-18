@@ -48,6 +48,10 @@ public class RegistrationService {
         if (tournament == null) {
             throw new IllegalArgumentException("Tournament not found");
         }
+        if (tournament.isStarted()){
+            throw new IllegalStateException("Cannot unregister from a tournament that has already started.");
+        }
+
 
         boolean registered = registrationDAO.isUserRegistered(tournamentId, caller.getUserId());
         if (!registered) {

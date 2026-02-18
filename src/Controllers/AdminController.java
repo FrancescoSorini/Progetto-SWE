@@ -1,8 +1,10 @@
 package Controllers;
 
 import DomainModel.GameType;
+import DomainModel.card.Card;
 import DomainModel.tournament.Tournament;
 import DomainModel.tournament.TournamentStatus;
+import Services.card.CardService;
 import Services.tournament.TournamentService;
 import Services.user.UserService;
 import Controllers.security.ControllerGuards;
@@ -20,11 +22,13 @@ public class AdminController {
 
     private final Scanner scanner;
     private final UserService userService;
+    private final CardService cardService;
     private final TournamentService tournamentService;
 
-    public AdminController(Scanner scanner, UserService userService, TournamentService tournamentService) {
+    public AdminController(Scanner scanner, UserService userService, CardService cardService, TournamentService tournamentService) {
         this.scanner = scanner;
         this.userService = userService;
+        this.cardService = cardService;
         this.tournamentService = tournamentService;
     }
 
@@ -43,7 +47,7 @@ public class AdminController {
             String choice = scanner.nextLine();
 
             switch (choice) {
-                case "1" -> System.out.println(">> Gestione Carte (da implementare)");
+                case "1" -> gestioneCarteMenu();
                 case "2" -> gestioneUtentiMenu();
                 case "3" -> approvazioneTorneiMenu();
                 case "4" -> {
@@ -229,6 +233,194 @@ public class AdminController {
             System.out.println("Start date: " + tournament.getStartDate());
             System.out.println("GameType: " + tournament.getGameType());
             System.out.println("Status: " + tournament.getStatus());
+        }
+    }
+
+    private void gestioneCarteMenu() throws SQLException {
+        User caller = ControllerGuards.requireRole(Role.ADMIN);
+        boolean running = true;
+
+        while (running) {
+            System.out.println("\n--- GESTIONE CARTE ---");
+            System.out.println("1) Consulta catalogo");
+            System.out.println("2) Cerca Carta");
+            System.out.println("3) Crea carta");
+            System.out.println("4) Indietro");
+            System.out.print("Scelta: ");
+
+            String choice = scanner.nextLine().trim();
+            switch (choice) {
+                case "1" -> consultaCatalogoCarte(caller);
+                case "2" -> cercaCarta(caller);
+                case "3" -> creaCartaDaMenu(caller);
+                case "4" -> running = false;
+                default -> System.out.println("Scelta non valida.");
+            }
+        }
+    }
+
+    private void consultaCatalogoCarte(User caller) throws SQLException {
+        GameType sessionGameType = UserSession.getInstance().getGameType();
+        if (sessionGameType == null) {
+            throw new IllegalStateException("GameType non selezionato in sessione.");
+        }
+
+        List<Card> cards = cardService.getCardsByGameType(sessionGameType);
+        printCardDetails(cards);
+
+        if (cards.isEmpty()) {
+            return;
+        }
+
+        boolean running = true;
+        while (running) {
+            System.out.println("\nAzioni catalogo:");
+            System.out.println("1) Modifica carta");
+            System.out.println("2) Cancella carta");
+            System.out.println("3) Indietro");
+            System.out.print("Scelta: ");
+
+            String action = scanner.nextLine().trim();
+            switch (action) {
+                case "1" -> modificaCartaDaCatalogo(caller, cards);
+                case "2" -> cancellaCartaDaCatalogo(caller, cards);
+                case "3" -> running = false;
+                default -> System.out.println("Scelta non valida.");
+            }
+        }
+    }
+
+    public void cercaCarta(User caller){
+        GameType sessionGameType = UserSession.getInstance().getGameType();
+        if (sessionGameType == null) {
+            throw new IllegalStateException("GameType non selezionato in sessione.");
+        }
+
+        System.out.print("Inserisci nome carta da cercare: ");
+        String keyword = scanner.nextLine().trim();
+
+        try {
+            List<Card> results = cardService.searchCardsByName(sessionGameType, keyword);
+            printCardDetails(results);
+
+            boolean running = true;
+            while (running) {
+                System.out.println("\nOpzioni carta:");
+                System.out.println("1) Modifica carta");
+                System.out.println("2) Cancella carta");
+                System.out.println("3) Indietro");
+                System.out.print("Scelta: ");
+
+                String action = scanner.nextLine().trim();
+                switch (action) {
+                    case "1" -> modificaCartaDaCatalogo(caller, results);
+                    case "2" -> cancellaCartaDaCatalogo(caller, results);
+                    case "3" -> running = false;
+                    default -> System.out.println("Scelta non valida.");
+                }
+            }
+
+
+        } catch (IllegalArgumentException e) {
+            System.out.println("Errore nella ricerca: " + e.getMessage());
+        } catch (SQLException e) {
+            System.out.println("Errore di database durante la ricerca: " + e.getMessage());
+        }
+    }
+
+    private void creaCartaDaMenu(User caller) throws SQLException {
+        GameType sessionGameType = UserSession.getInstance().getGameType();
+        if (sessionGameType == null) {
+            throw new IllegalStateException("GameType non selezionato in sessione.");
+        }
+
+        System.out.print("Inserisci nome carta: ");
+        String name = scanner.nextLine().trim();
+
+        Card card = new Card(name, sessionGameType);
+        cardService.createCard(caller, card);
+        System.out.println("Carta creata con successo.");
+    }
+
+    private void modificaCartaDaCatalogo(User caller, List<Card> cards) throws SQLException {
+        int cardId = readCardIdFromCli();
+        Card target = cards.stream()
+                .filter(c -> c.getCardId() == cardId)
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Carta non trovata nel catalogo selezionato."));
+
+        System.out.print("Nuovo nome (invio per non modificare): ");
+        String newName = scanner.nextLine().trim();
+        if (!newName.isBlank()) {
+            cardService.updateCardName(caller, target.getCardId(), newName);
+        }
+
+        GameType newType = readOptionalGameType();
+        if (newType != null) {
+            cardService.updateCardType(caller, target.getCardId(), newType);
+        }
+
+        if (newName.isBlank() && newType == null) {
+            System.out.println("Nessuna modifica applicata.");
+            return;
+        }
+
+        System.out.println("Carta aggiornata con successo.");
+    }
+
+    private void cancellaCartaDaCatalogo(User caller, List<Card> cards) throws SQLException {
+        int cardId = readCardIdFromCli();
+        boolean exists = cards.stream().anyMatch(c -> c.getCardId() == cardId);
+        if (!exists) {
+            throw new IllegalArgumentException("Carta non trovata nel catalogo selezionato.");
+        }
+
+        cardService.deleteCard(caller, cardId);
+        System.out.println("Carta cancellata con successo.");
+    }
+
+    private int readCardIdFromCli() {
+        System.out.print("Inserisci ID carta: ");
+        String idInput = scanner.nextLine().trim();
+        try {
+            return Integer.parseInt(idInput);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("ID carta non valido.");
+        }
+    }
+
+    private GameType readOptionalGameType() {
+        System.out.println("Nuovo GameType (invio per non modificare):");
+        System.out.println("1) MAGIC");
+        System.out.println("2) POKEMON");
+        System.out.println("3) YUGIOH");
+        System.out.print("Scelta: ");
+
+        String input = scanner.nextLine().trim();
+        if (input.isBlank()) {
+            return null;
+        }
+
+        return switch (input) {
+            case "1" -> GameType.MAGIC;
+            case "2" -> GameType.POKEMON;
+            case "3" -> GameType.YUGIOH;
+            default -> throw new IllegalArgumentException("GameType non valido.");
+        };
+    }
+
+    private void printCardDetails(List<Card> cards) {
+        System.out.println("\n--- CATALOGO CARTE ---");
+        if (cards.isEmpty()) {
+            System.out.println("Nessuna carta trovata per il GameType selezionato.");
+            return;
+        }
+
+        for (Card card : cards) {
+            System.out.println("----------------------");
+            System.out.println("ID: " + card.getCardId());
+            System.out.println("Nome: " + card.getName());
+            System.out.println("GameType: " + card.getType());
         }
     }
 }
