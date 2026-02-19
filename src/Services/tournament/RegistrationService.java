@@ -1,5 +1,6 @@
 package Services.tournament;
 
+import Controllers.session.UserSession;
 import DomainModel.tournament.Registration;
 import DomainModel.tournament.Tournament;
 import DomainModel.tournament.TournamentStatus;
@@ -78,6 +79,10 @@ public class RegistrationService {
         }
 
         registrationDAO.deleteRegistration(tournamentId, userId);
+        UserSession.addNotificationForUser(
+                userId,
+                "Sei stato rimosso dal torneo ID " + tournamentId + " dall'organizzatore."
+        );
     }
 
     // ====================================================================================

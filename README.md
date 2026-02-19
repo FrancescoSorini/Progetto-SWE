@@ -31,12 +31,14 @@ Specialmente per i test della Services.
 ## TODO CODICE
 - Errore conteggio iscrizioni nella lista dentro "I miei tornei"
 - Controllare che utente non veda tornei "scaduti" nella lista "Check Tornei"
+- Automatizzare il cambio di status tornei quando diventano full o si supera la deadline / start date con una classe controller apposita
 - Rimuovi scelta gametype da creazione torneo, in quanto si sceglie il game type al login
-- Implementa rimozione torneo rejected dal db
+- Formattare data iscrizione tornei in modo più leggibile
 -----------------------------------------------------------------------------------
 - Correggere comportamenti errati nella CLI con messaggi di errore più chiari.
 -----------------------------------------------------------------------------------
 - Testare DomainModel, Services e Controllers
+- Controlla anche test DAO
 
 ## TODO DOCUMENTAZIONE
 - DatabaseConnection: esplicitare l'uso del singleton per gestire la connessione al database in modo efficiente e sicuro.

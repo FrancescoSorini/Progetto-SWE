@@ -95,15 +95,21 @@ public class TournamentService {
                 tournamentDAO.updateTournament(t);
             }
 
-            if (t.getStatus() == TournamentStatus.READY && LocalDate.now().isAfter(t.getStartDate())) {
-                attachObservers(t);
-                t.setStatus(TournamentStatus.CLOSED);
-                tournamentDAO.updateTournament(t);
-            }
-
             if (t.getStatus() == TournamentStatus.APPROVED && t.isFull()) {
                 attachObservers(t);
                 t.setStatus(TournamentStatus.READY);
+                tournamentDAO.updateTournament(t);
+            }
+
+            if (t.getStatus() == TournamentStatus.READY && LocalDate.now().isEqual(t.getStartDate())) {
+                attachObservers(t);
+                t.setStatus(TournamentStatus.ONGOING);
+                tournamentDAO.updateTournament(t);
+            }
+
+            if (t.getStatus() == TournamentStatus.ONGOING && LocalDate.now().isAfter(t.getStartDate())) {
+                attachObservers(t);
+                t.setStatus(TournamentStatus.FINISHED);
                 tournamentDAO.updateTournament(t);
             }
         }

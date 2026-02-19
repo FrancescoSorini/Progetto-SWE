@@ -162,7 +162,7 @@ public class TestTournamentDAO {
         t2.setCapacity(32);
         t2.setDeadline(LocalDate.now().plusDays(10));
         t2.setStartDate(LocalDate.now().plusDays(15));
-        t2.setStatus(TournamentStatus.CLOSED);
+        t2.setStatus(TournamentStatus.FINISHED);
         t2.setGameType(GameType.YUGIOH);
 
         tournamentDAO.createTournament(t2);

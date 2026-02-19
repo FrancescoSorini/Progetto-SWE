@@ -3,11 +3,17 @@ package Controllers.session;
 import DomainModel.GameType;
 import DomainModel.user.User;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 public class UserSession {
 
     private static UserSession instance;
     private static User currentUser;
     private GameType currentGameType;
+    private static final Map<Integer, List<String>> notificationsByUserId = new HashMap<>();
 
     private UserSession() {}
 
@@ -68,5 +74,19 @@ public class UserSession {
 
     public boolean isPlayer() {
         return isLoggedIn() && currentUser.getRole().name().equals("PLAYER");
+    }
+
+    public static void addNotificationForUser(int userId, String message) {
+        notificationsByUserId.computeIfAbsent(userId, key -> new ArrayList<>()).add(message);
+    }
+
+    public static List<String> getAndClearNotificationsForCurrentUser() {
+        if (!isLoggedIn()) {
+            return List.of();
+        }
+        int userId = currentUser.getUserId();
+        List<String> messages = notificationsByUserId.getOrDefault(userId, new ArrayList<>());
+        notificationsByUserId.remove(userId);
+        return messages;
     }
 }

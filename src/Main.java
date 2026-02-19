@@ -26,7 +26,7 @@ public class Main {
                 scanner, cardService, deckService, tournamentService, registrationService
         );
         AdminController adminController = new AdminController(scanner, userService, cardService, tournamentService);
-        OrganizerController organizerController = new OrganizerController(scanner, tournamentService);
+        OrganizerController organizerController = new OrganizerController(scanner, tournamentService, registrationService);
         RoleMenuController roleMenuController =
                 new RoleMenuController(playerController, adminController, organizerController);
         GuestController guestController = new GuestController(scanner, userService, roleMenuController);

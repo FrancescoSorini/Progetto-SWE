@@ -5,9 +5,6 @@ public enum TournamentStatus {
     APPROVED,
     REJECTED,
     READY,
-    CLOSED;
-
-    public boolean isFinalState() {
-        return this == REJECTED || this == CLOSED;
-    }
+    ONGOING,
+    FINISHED;
 }

@@ -1,9 +1,5 @@
 package Controllers;
 
-import Services.card.CardService;
-import Services.card.DeckService;
-import Services.tournament.RegistrationService;
-import Services.tournament.TournamentService;
 import Controllers.security.ControllerGuards;
 import Controllers.session.UserSession;
 import DomainModel.GameType;
@@ -14,6 +10,10 @@ import DomainModel.tournament.Tournament;
 import DomainModel.tournament.TournamentStatus;
 import DomainModel.user.Role;
 import DomainModel.user.User;
+import Services.card.CardService;
+import Services.card.DeckService;
+import Services.tournament.RegistrationService;
+import Services.tournament.TournamentService;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -322,7 +322,7 @@ public class PlayerController {
             throw new IllegalStateException("GameType non selezionato in sessione.");
         }
 
-        // Qui vengono emesse anche le notifiche observer se ci sono cambi stato.
+        showPendingNotifications();
         tournamentService.updateTournamentStatusesAutomatically();
 
         boolean running = true;
@@ -407,7 +407,7 @@ public class PlayerController {
     }
 
     private void mieiTorneiFlow(User caller) throws SQLException {
-        // Anche qui: se cambiano stati, observer può notificare in output.
+        showPendingNotifications();
         tournamentService.updateTournamentStatusesAutomatically();
 
         boolean running = true;
@@ -417,7 +417,8 @@ public class PlayerController {
                     .map(Registration::getTournament)
                     .filter(t -> t.getStatus() == TournamentStatus.APPROVED
                             || t.getStatus() == TournamentStatus.READY
-                            || t.getStatus() == TournamentStatus.CLOSED)
+                            || t.getStatus() == TournamentStatus.ONGOING
+                            || t.getStatus() == TournamentStatus.FINISHED)
                     .toList();
 
             System.out.println("\n--- I MIEI TORNEI ---");
@@ -476,6 +477,18 @@ public class PlayerController {
             System.out.println("Start date: " + tournament.getStartDate());
             System.out.println("GameType: " + tournament.getGameType());
             System.out.println("Status: " + tournament.getStatus());
+        }
+    }
+
+    private void showPendingNotifications() {
+        List<String> notifications = UserSession.getAndClearNotificationsForCurrentUser();
+        if (notifications.isEmpty()) {
+            return;
+        }
+
+        System.out.println("\n--- NOTIFICHE ---");
+        for (String message : notifications) {
+            System.out.println("* " + message);
         }
     }
 }

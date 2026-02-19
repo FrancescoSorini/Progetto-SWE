@@ -249,7 +249,8 @@ public class TournamentDAO {
             case APPROVED -> 2;
             case REJECTED -> 3;
             case READY -> 4;
-            case CLOSED -> 5;
+            case ONGOING -> 5;
+            case FINISHED -> 6;
         };
     }
 
@@ -259,7 +260,8 @@ public class TournamentDAO {
             case 2 -> TournamentStatus.APPROVED;
             case 3 -> TournamentStatus.REJECTED;
             case 4 -> TournamentStatus.READY;
-            case 5 -> TournamentStatus.CLOSED;
+            case 5 -> TournamentStatus.ONGOING;
+            case 6 -> TournamentStatus.FINISHED;
             default -> throw new IllegalArgumentException("Invalid status id: " + id);
         };
     }
