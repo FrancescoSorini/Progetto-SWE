@@ -10,6 +10,7 @@ import DomainModel.user.Role;
 import DomainModel.user.User;
 import Services.tournament.RegistrationService;
 import Services.tournament.TournamentService;
+import Services.user.UserService;
 
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -23,16 +24,24 @@ public class OrganizerController {
     private final Scanner scanner;
     private final TournamentService tournamentService;
     private final RegistrationService registrationService;
+    private final TournamentStatusController tournamentStatusController;
+    private final UserService userService;
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private static final DateTimeFormatter REGISTRATION_DATE_TIME_FORMATTER =
+            DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
 
     public OrganizerController(
             Scanner scanner,
             TournamentService tournamentService,
-            RegistrationService registrationService
+            RegistrationService registrationService,
+            TournamentStatusController tournamentStatusController,
+            UserService userService
     ) {
         this.scanner = scanner;
         this.tournamentService = tournamentService;
         this.registrationService = registrationService;
+        this.tournamentStatusController = tournamentStatusController;
+        this.userService = userService;
     }
 
     public void organizerMenu() throws SQLException {
@@ -43,26 +52,95 @@ public class OrganizerController {
             System.out.println("\n--- MENU ORGANIZER ---");
             System.out.println("1) Crea Torneo");
             System.out.println("2) Gestisci Torneo");
-            System.out.println("3) Logout");
+            System.out.println("3) Area Personale");
+            System.out.println("4) Cambia Gioco");
+            System.out.println("5) Logout");
             System.out.print("Scelta: ");
 
             String choice = scanner.nextLine();
-
-            switch (choice) {
-                case "1" -> createTournamentFlow();
-                case "2" -> gestisciTorneoMenu();
-                case "3" -> {
-                    UserSession.getInstance().logout();
-                    running = false;
+            try {
+                switch (choice) {
+                    case "1" -> createTournamentFlow();
+                    case "2" -> gestisciTorneoMenu();
+                    case "3" -> areaPersonaleMenu();
+                    case "4" -> selectGameType();
+                    case "5" -> {
+                        UserSession.getInstance().logout();
+                        running = false;
+                    }
+                    default -> System.out.println("Scelta non valida.");
                 }
-                default -> System.out.println("Scelta non valida.");
+            } catch (Exception e) {
+                System.out.println("Errore: " + e.getMessage());
             }
+        }
+    }
+
+    private void areaPersonaleMenu() throws SQLException {
+        User caller = ControllerGuards.requireRole(Role.ORGANIZER);
+        boolean running = true;
+
+        while (running) {
+            User freshUser = userService.getUser(caller.getUserId());
+            printPersonalData(freshUser);
+            System.out.println("1) Modifica username");
+            System.out.println("2) Modifica email");
+            System.out.println("3) Modifica password");
+            System.out.println("4) Indietro");
+            System.out.print("Scelta: ");
+
+            String choice = scanner.nextLine().trim();
+            try {
+                switch (choice) {
+                    case "1" -> {
+                        System.out.print("Nuovo username: ");
+                        String newUsername = scanner.nextLine().trim();
+                        userService.changeUsername(caller.getUserId(), newUsername);
+                        caller.setUsername(newUsername);
+                        System.out.println("Username aggiornato con successo.");
+                    }
+                    case "2" -> {
+                        System.out.print("Nuova email: ");
+                        String newEmail = scanner.nextLine().trim();
+                        userService.changeEmail(caller.getUserId(), newEmail);
+                        caller.setEmail(newEmail);
+                        System.out.println("Email aggiornata con successo.");
+                    }
+                    case "3" -> {
+                        System.out.print("Nuova password: ");
+                        String newPassword = scanner.nextLine().trim();
+                        userService.changePassword(caller.getUserId(), newPassword);
+                        caller.setPassword(newPassword);
+                        System.out.println("Password aggiornata con successo.");
+                    }
+                    case "4" -> running = false;
+                    default -> System.out.println("Scelta non valida.");
+                }
+            } catch (Exception e) {
+                System.out.println("Errore: " + e.getMessage());
+            }
+        }
+    }
+
+    private void selectGameType() {
+        System.out.println("\nScegli il gioco:");
+        System.out.println("1) Magic");
+        System.out.println("2) Yu-Gi-Oh");
+        System.out.println("3) Pokemon");
+        System.out.print("Scelta: ");
+
+        String choice = scanner.nextLine().trim();
+        switch (choice) {
+            case "1" -> UserSession.getInstance().setGameType(GameType.MAGIC);
+            case "2" -> UserSession.getInstance().setGameType(GameType.YUGIOH);
+            case "3" -> UserSession.getInstance().setGameType(GameType.POKEMON);
+            default -> throw new IllegalArgumentException("Scelta gioco non valida.");
         }
     }
 
     private void gestisciTorneoMenu() throws SQLException {
         User caller = ControllerGuards.requireRole(Role.ORGANIZER);
-        tournamentService.updateTournamentStatusesAutomatically();
+        tournamentStatusController.syncTournamentStatuses();
 
         boolean running = true;
         while (running) {
@@ -77,15 +155,19 @@ public class OrganizerController {
             System.out.print("Scelta: ");
 
             String choice = scanner.nextLine().trim();
-            switch (choice) {
-                case "1" -> pendingTournamentsMenu(caller);
-                case "2" -> approvedTournamentsMenu(caller);
-                case "3" -> rejectedTournamentsMenu(caller);
-                case "4" -> readyTournamentsMenu(caller);
-                case "5" -> ongoingTournamentsMenu(caller);
-                case "6" -> finishedTournamentsMenu(caller);
-                case "7" -> running = false;
-                default -> System.out.println("Scelta non valida.");
+            try {
+                switch (choice) {
+                    case "1" -> pendingTournamentsMenu(caller);
+                    case "2" -> approvedTournamentsMenu(caller);
+                    case "3" -> rejectedTournamentsMenu(caller);
+                    case "4" -> readyTournamentsMenu(caller);
+                    case "5" -> ongoingTournamentsMenu(caller);
+                    case "6" -> finishedTournamentsMenu(caller);
+                    case "7" -> running = false;
+                    default -> System.out.println("Scelta non valida.");
+                }
+            } catch (Exception e) {
+                System.out.println("Errore: " + e.getMessage());
             }
         }
     }
@@ -103,11 +185,15 @@ public class OrganizerController {
             System.out.print("Scelta: ");
 
             String choice = scanner.nextLine().trim();
-            switch (choice) {
-                case "1" -> modifyTournamentFlow(caller, tournaments);
-                case "2" -> deleteTournamentFlow(caller, tournaments);
-                case "3" -> running = false;
-                default -> System.out.println("Scelta non valida.");
+            try {
+                switch (choice) {
+                    case "1" -> modifyTournamentFlow(caller, tournaments);
+                    case "2" -> deleteTournamentFlow(caller, tournaments);
+                    case "3" -> running = false;
+                    default -> System.out.println("Scelta non valida.");
+                }
+            } catch (Exception e) {
+                System.out.println("Errore: " + e.getMessage());
             }
         }
     }
@@ -125,14 +211,18 @@ public class OrganizerController {
             System.out.print("Scelta: ");
 
             String choice = scanner.nextLine().trim();
-            switch (choice) {
-                case "1" -> {
-                    Tournament target = selectTournamentFromList(tournaments);
-                    partecipantiMenu(caller, target);
+            try {
+                switch (choice) {
+                    case "1" -> {
+                        Tournament target = selectTournamentFromList(tournaments);
+                        partecipantiMenu(caller, target);
+                    }
+                    case "2" -> deleteTournamentFlow(caller, tournaments);
+                    case "3" -> running = false;
+                    default -> System.out.println("Scelta non valida.");
                 }
-                case "2" -> deleteTournamentFlow(caller, tournaments);
-                case "3" -> running = false;
-                default -> System.out.println("Scelta non valida.");
+            } catch (Exception e) {
+                System.out.println("Errore: " + e.getMessage());
             }
         }
     }
@@ -149,10 +239,14 @@ public class OrganizerController {
             System.out.print("Scelta: ");
 
             String choice = scanner.nextLine().trim();
-            switch (choice) {
-                case "1" -> deleteTournamentFlow(caller, tournaments);
-                case "2" -> running = false;
-                default -> System.out.println("Scelta non valida.");
+            try {
+                switch (choice) {
+                    case "1" -> deleteTournamentFlow(caller, tournaments);
+                    case "2" -> running = false;
+                    default -> System.out.println("Scelta non valida.");
+                }
+            } catch (Exception e) {
+                System.out.println("Errore: " + e.getMessage());
             }
         }
     }
@@ -169,13 +263,17 @@ public class OrganizerController {
             System.out.print("Scelta: ");
 
             String choice = scanner.nextLine().trim();
-            switch (choice) {
-                case "1" -> {
-                    Tournament target = selectTournamentFromList(tournaments);
-                    partecipantiMenu(caller, target);
+            try {
+                switch (choice) {
+                    case "1" -> {
+                        Tournament target = selectTournamentFromList(tournaments);
+                        partecipantiMenu(caller, target);
+                    }
+                    case "2" -> running = false;
+                    default -> System.out.println("Scelta non valida.");
                 }
-                case "2" -> running = false;
-                default -> System.out.println("Scelta non valida.");
+            } catch (Exception e) {
+                System.out.println("Errore: " + e.getMessage());
             }
         }
     }
@@ -204,22 +302,26 @@ public class OrganizerController {
             System.out.print("Scelta: ");
 
             String choice = scanner.nextLine().trim();
-            switch (choice) {
-                case "1" -> {
-                    if (participants.isEmpty()) {
-                        System.out.println("Nessun partecipante da rimuovere.");
-                        continue;
+            try {
+                switch (choice) {
+                    case "1" -> {
+                        if (participants.isEmpty()) {
+                            System.out.println("Nessun partecipante da rimuovere.");
+                            continue;
+                        }
+                        int userId = readUserId();
+                        boolean exists = participants.stream().anyMatch(r -> r.getUser().getUserId() == userId);
+                        if (!exists) {
+                            throw new IllegalArgumentException("Utente non trovato tra i partecipanti.");
+                        }
+                        registrationService.unregisterUserFromTournament(caller, target.getTournamentId(), userId);
+                        System.out.println("Iscrizione utente rimossa con successo.");
                     }
-                    int userId = readUserId();
-                    boolean exists = participants.stream().anyMatch(r -> r.getUser().getUserId() == userId);
-                    if (!exists) {
-                        throw new IllegalArgumentException("Utente non trovato tra i partecipanti.");
-                    }
-                    registrationService.unregisterUserFromTournament(caller, target.getTournamentId(), userId);
-                    System.out.println("Iscrizione utente rimossa con successo.");
+                    case "2" -> running = false;
+                    default -> System.out.println("Scelta non valida.");
                 }
-                case "2" -> running = false;
-                default -> System.out.println("Scelta non valida.");
+            } catch (Exception e) {
+                System.out.println("Errore: " + e.getMessage());
             }
         }
     }
@@ -334,7 +436,7 @@ public class OrganizerController {
         int capacity = readCapacity();
         LocalDate deadline = readDate("Data termine iscrizioni (gg/mm/aaaa): ");
         LocalDate startDate = readDate("Data inizio torneo (gg/mm/aaaa): ");
-        GameType gameType = readGameType();
+        GameType gameType = UserSession.getInstance().getGameType();
 
         Tournament tournament = new Tournament();
         tournament.setName(name);
@@ -408,22 +510,6 @@ public class OrganizerController {
         }
     }
 
-    private GameType readGameType() {
-        System.out.println("Scegli GameType:");
-        System.out.println("1) MAGIC");
-        System.out.println("2) POKEMON");
-        System.out.println("3) YUGIOH");
-        System.out.print("Scelta: ");
-
-        String choice = scanner.nextLine().trim();
-        return switch (choice) {
-            case "1" -> GameType.MAGIC;
-            case "2" -> GameType.POKEMON;
-            case "3" -> GameType.YUGIOH;
-            default -> throw new IllegalArgumentException("GameType non valido.");
-        };
-    }
-
     private GameType readOptionalGameType(GameType currentType) {
         System.out.println("GameType corrente: " + currentType);
         System.out.println("Nuovo GameType (invio per non modificare):");
@@ -473,12 +559,24 @@ public class OrganizerController {
         }
 
         for (Registration registration : participants) {
+            String formattedRegistrationDateTime =
+                    registration.getRegistrationDate().format(REGISTRATION_DATE_TIME_FORMATTER);
+
             System.out.println("----------------------");
             System.out.println("User ID: " + registration.getUser().getUserId());
             System.out.println("Username: " + registration.getUser().getUsername());
             System.out.println("Email: " + registration.getUser().getEmail());
             System.out.println("Deck ID: " + registration.getRegDeck().getDeckId());
-            System.out.println("Data iscrizione: " + registration.getRegistrationDate());
+            System.out.println("Data/Ora iscrizione: " + formattedRegistrationDateTime);
         }
+    }
+
+    private void printPersonalData(User user) {
+        System.out.println("\n--- AREA PERSONALE ---");
+        System.out.println("ID: " + user.getUserId());
+        System.out.println("Username: " + user.getUsername());
+        System.out.println("Email: " + user.getEmail());
+        System.out.println("Ruolo: " + user.getRole());
+        System.out.println("Stato: " + (user.isEnabled() ? "Abilitato" : "Bannato"));
     }
 }

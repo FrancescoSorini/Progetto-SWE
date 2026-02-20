@@ -41,21 +41,90 @@ public class AdminController {
             System.out.println("1) Gestione Carte");
             System.out.println("2) Gestione Utenti");
             System.out.println("3) Approvazione Tornei");
-            System.out.println("4) Logout");
+            System.out.println("4) Area Personale");
+            System.out.println("5) Cambia Gioco");
+            System.out.println("6) Logout");
             System.out.print("Scelta: ");
 
             String choice = scanner.nextLine();
-
-            switch (choice) {
-                case "1" -> gestioneCarteMenu();
-                case "2" -> gestioneUtentiMenu();
-                case "3" -> approvazioneTorneiMenu();
-                case "4" -> {
-                    UserSession.getInstance().logout();
-                    running = false;
+            try {
+                switch (choice) {
+                    case "1" -> gestioneCarteMenu();
+                    case "2" -> gestioneUtentiMenu();
+                    case "3" -> approvazioneTorneiMenu();
+                    case "4" -> areaPersonaleMenu();
+                    case "5" -> selectGameType();
+                    case "6" -> {
+                        UserSession.getInstance().logout();
+                        running = false;
+                    }
+                    default -> System.out.println("Scelta non valida.");
                 }
-                default -> System.out.println("Scelta non valida.");
+            } catch (Exception e) {
+                System.out.println("Errore: " + e.getMessage());
             }
+        }
+    }
+
+    private void areaPersonaleMenu() throws SQLException {
+        User caller = ControllerGuards.requireRole(Role.ADMIN);
+        boolean running = true;
+
+        while (running) {
+            User freshUser = userService.getUser(caller.getUserId());
+            printPersonalData(freshUser);
+            System.out.println("1) Modifica username");
+            System.out.println("2) Modifica email");
+            System.out.println("3) Modifica password");
+            System.out.println("4) Indietro");
+            System.out.print("Scelta: ");
+
+            String choice = scanner.nextLine().trim();
+            try {
+                switch (choice) {
+                    case "1" -> {
+                        System.out.print("Nuovo username: ");
+                        String newUsername = scanner.nextLine().trim();
+                        userService.changeUsername(caller.getUserId(), newUsername);
+                        caller.setUsername(newUsername);
+                        System.out.println("Username aggiornato con successo.");
+                    }
+                    case "2" -> {
+                        System.out.print("Nuova email: ");
+                        String newEmail = scanner.nextLine().trim();
+                        userService.changeEmail(caller.getUserId(), newEmail);
+                        caller.setEmail(newEmail);
+                        System.out.println("Email aggiornata con successo.");
+                    }
+                    case "3" -> {
+                        System.out.print("Nuova password: ");
+                        String newPassword = scanner.nextLine().trim();
+                        userService.changePassword(caller.getUserId(), newPassword);
+                        caller.setPassword(newPassword);
+                        System.out.println("Password aggiornata con successo.");
+                    }
+                    case "4" -> running = false;
+                    default -> System.out.println("Scelta non valida.");
+                }
+            } catch (Exception e) {
+                System.out.println("Errore: " + e.getMessage());
+            }
+        }
+    }
+
+    private void selectGameType() {
+        System.out.println("\nScegli il gioco:");
+        System.out.println("1) Magic");
+        System.out.println("2) Yu-Gi-Oh");
+        System.out.println("3) Pokemon");
+        System.out.print("Scelta: ");
+
+        String choice = scanner.nextLine().trim();
+        switch (choice) {
+            case "1" -> UserSession.getInstance().setGameType(GameType.MAGIC);
+            case "2" -> UserSession.getInstance().setGameType(GameType.YUGIOH);
+            case "3" -> UserSession.getInstance().setGameType(GameType.POKEMON);
+            default -> throw new IllegalArgumentException("Scelta gioco non valida.");
         }
     }
 
@@ -71,25 +140,28 @@ public class AdminController {
             System.out.print("Scelta: ");
 
             String choice = scanner.nextLine();
+            try {
+                switch (choice) {
+                    case "1" -> {
+                        User caller = ControllerGuards.requireRole(Role.ADMIN);
+                        List<User> users = userService.getAllUsers(caller);
+                        printUsers(users);
+                        showUserManagementActions(caller);
+                    }
+                    case "2" -> {
+                        User caller = ControllerGuards.requireRole(Role.ADMIN);
+                        System.out.print("Inserisci nome (anche parziale): ");
+                        String keyword = scanner.nextLine();
 
-            switch (choice) {
-                case "1" -> {
-                    User caller = ControllerGuards.requireRole(Role.ADMIN);
-                    List<User> users = userService.getAllUsers(caller);
-                    printUsers(users);
-                    showUserManagementActions(caller);
+                        List<User> results = userService.searchUsersByName(keyword);
+                        printUsers(results);
+                        showUserManagementActions(caller);
+                    }
+                    case "3" -> running = false;
+                    default -> System.out.println("Scelta non valida.");
                 }
-                case "2" -> {
-                    User caller = ControllerGuards.requireRole(Role.ADMIN);
-                    System.out.print("Inserisci nome (anche parziale): ");
-                    String keyword = scanner.nextLine();
-
-                    List<User> results = userService.searchUsersByName(keyword);
-                    printUsers(results);
-                    showUserManagementActions(caller);
-                }
-                case "3" -> running = false;
-                default -> System.out.println("Scelta non valida.");
+            } catch (Exception e) {
+                System.out.println("Errore: " + e.getMessage());
             }
         }
     }
@@ -105,12 +177,15 @@ public class AdminController {
             System.out.print("Scelta: ");
 
             String actionChoice = scanner.nextLine();
-
-            switch (actionChoice) {
-                case "1" -> handleChangeUserRole(caller);
-                case "2" -> handleSetUserEnabled(caller);
-                case "3" -> managing = false;
-                default -> System.out.println("Scelta non valida.");
+            try {
+                switch (actionChoice) {
+                    case "1" -> handleChangeUserRole(caller);
+                    case "2" -> handleSetUserEnabled(caller);
+                    case "3" -> managing = false;
+                    default -> System.out.println("Scelta non valida.");
+                }
+            } catch (Exception e) {
+                System.out.println("Errore: " + e.getMessage());
             }
         }
     }
@@ -249,12 +324,16 @@ public class AdminController {
             System.out.print("Scelta: ");
 
             String choice = scanner.nextLine().trim();
-            switch (choice) {
-                case "1" -> consultaCatalogoCarte(caller);
-                case "2" -> cercaCarta(caller);
-                case "3" -> creaCartaDaMenu(caller);
-                case "4" -> running = false;
-                default -> System.out.println("Scelta non valida.");
+            try {
+                switch (choice) {
+                    case "1" -> consultaCatalogoCarte(caller);
+                    case "2" -> cercaCarta(caller);
+                    case "3" -> creaCartaDaMenu(caller);
+                    case "4" -> running = false;
+                    default -> System.out.println("Scelta non valida.");
+                }
+            } catch (Exception e) {
+                System.out.println("Errore: " + e.getMessage());
             }
         }
     }
@@ -281,11 +360,15 @@ public class AdminController {
             System.out.print("Scelta: ");
 
             String action = scanner.nextLine().trim();
-            switch (action) {
-                case "1" -> modificaCartaDaCatalogo(caller, cards);
-                case "2" -> cancellaCartaDaCatalogo(caller, cards);
-                case "3" -> running = false;
-                default -> System.out.println("Scelta non valida.");
+            try {
+                switch (action) {
+                    case "1" -> modificaCartaDaCatalogo(caller, cards);
+                    case "2" -> cancellaCartaDaCatalogo(caller, cards);
+                    case "3" -> running = false;
+                    default -> System.out.println("Scelta non valida.");
+                }
+            } catch (Exception e) {
+                System.out.println("Errore: " + e.getMessage());
             }
         }
     }
@@ -422,5 +505,14 @@ public class AdminController {
             System.out.println("Nome: " + card.getName());
             System.out.println("GameType: " + card.getType());
         }
+    }
+
+    private void printPersonalData(User user) {
+        System.out.println("\n--- AREA PERSONALE ---");
+        System.out.println("ID: " + user.getUserId());
+        System.out.println("Username: " + user.getUsername());
+        System.out.println("Email: " + user.getEmail());
+        System.out.println("Ruolo: " + user.getRole());
+        System.out.println("Stato: " + (user.isEnabled() ? "Abilitato" : "Bannato"));
     }
 }

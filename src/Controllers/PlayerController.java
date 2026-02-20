@@ -14,8 +14,10 @@ import Services.card.CardService;
 import Services.card.DeckService;
 import Services.tournament.RegistrationService;
 import Services.tournament.TournamentService;
+import Services.user.UserService;
 
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Scanner;
 
@@ -28,19 +30,25 @@ public class PlayerController {
     private final DeckService deckService;
     private final TournamentService tournamentService;
     private final RegistrationService registrationService;
+    private final TournamentStatusController tournamentStatusController;
+    private final UserService userService;
 
     public PlayerController(
             Scanner scanner,
             CardService cardService,
             DeckService deckService,
             TournamentService tournamentService,
-            RegistrationService registrationService
+            RegistrationService registrationService,
+            TournamentStatusController tournamentStatusController,
+            UserService userService
     ) {
         this.scanner = scanner;
         this.cardService = cardService;
         this.deckService = deckService;
         this.tournamentService = tournamentService;
         this.registrationService = registrationService;
+        this.tournamentStatusController = tournamentStatusController;
+        this.userService = userService;
     }
 
     public void playerMenu() throws SQLException {
@@ -52,21 +60,99 @@ public class PlayerController {
             System.out.println("1) Gestione Mazzi");
             System.out.println("2) Catalogo Carte");
             System.out.println("3) Check Tornei");
-            System.out.println("4) Logout");
+            System.out.println("4) Area Personale");
+            System.out.println("5) Cambia Gioco");
+            System.out.println("6) Logout");
             System.out.print("Scelta: ");
 
             String choice = scanner.nextLine();
-
-            switch (choice) {
-                case "1" -> gestioneMazziMenu();
-                case "2" -> catalogoCarteMenu();
-                case "3" -> checkTorneiMenu();
-                case "4" -> {
-                    UserSession.getInstance().logout();
-                    running = false;
+            try {
+                switch (choice) {
+                    case "1" -> gestioneMazziMenu();
+                    case "2" -> catalogoCarteMenu();
+                    case "3" -> checkTorneiMenu();
+                    case "4" -> areaPersonaleMenu();
+                    case "5" -> selectGameType();
+                    case "6" -> {
+                        UserSession.getInstance().logout();
+                        running = false;
+                    }
+                    default -> System.out.println("Scelta non valida.");
                 }
-                default -> System.out.println("Scelta non valida.");
+            } catch (Exception e) {
+                System.out.println("Errore: " + e.getMessage());
             }
+        }
+    }
+
+    private void areaPersonaleMenu() throws SQLException {
+        User caller = ControllerGuards.requireRole(Role.PLAYER);
+        boolean running = true;
+
+        while (running) {
+            User freshUser = userService.getUser(caller.getUserId());
+            printPersonalData(freshUser);
+            System.out.println("1) Modifica username");
+            System.out.println("2) Modifica email");
+            System.out.println("3) Modifica password");
+            System.out.println("4) Indietro");
+            System.out.print("Scelta: ");
+
+            String choice = scanner.nextLine().trim();
+            try {
+                switch (choice) {
+                    case "1" -> {
+                        System.out.print("Nuovo username: ");
+                        String newUsername = scanner.nextLine().trim();
+                        userService.changeUsername(caller.getUserId(), newUsername);
+                        caller.setUsername(newUsername);
+                        System.out.println("Username aggiornato con successo.");
+                    }
+                    case "2" -> {
+                        System.out.print("Nuova email: ");
+                        String newEmail = scanner.nextLine().trim();
+                        userService.changeEmail(caller.getUserId(), newEmail);
+                        caller.setEmail(newEmail);
+                        System.out.println("Email aggiornata con successo.");
+                    }
+                    case "3" -> {
+                        System.out.print("Nuova password: ");
+                        String newPassword = scanner.nextLine().trim();
+                        userService.changePassword(caller.getUserId(), newPassword);
+                        caller.setPassword(newPassword);
+                        System.out.println("Password aggiornata con successo.");
+                    }
+                    case "4" -> running = false;
+                    default -> System.out.println("Scelta non valida.");
+                }
+            } catch (Exception e) {
+                System.out.println("Errore: " + e.getMessage());
+            }
+        }
+    }
+
+    private void printPersonalData(User user) {
+        System.out.println("\n--- AREA PERSONALE ---");
+        System.out.println("ID: " + user.getUserId());
+        System.out.println("Username: " + user.getUsername());
+        System.out.println("Email: " + user.getEmail());
+        System.out.println("Ruolo: " + user.getRole());
+        System.out.println("Stato: " + (user.isEnabled() ? "Abilitato" : "Bannato"));
+    }
+
+    private void selectGameType() {
+        System.out.println("\nScegli il gioco:");
+        System.out.println("1) Magic");
+        System.out.println("2) Yu-Gi-Oh");
+        System.out.println("3) Pokemon");
+        System.out.print("Scelta: ");
+
+        String choice = scanner.nextLine().trim();
+        switch (choice) {
+            case "1" -> UserSession.getInstance().setGameType(GameType.MAGIC);
+            case "2" -> UserSession.getInstance().setGameType(GameType.YUGIOH);
+            case "3" -> UserSession.getInstance().setGameType(GameType.POKEMON);
+            default -> throw new IllegalArgumentException("Scelta gioco non valida.");
         }
     }
 
@@ -75,7 +161,7 @@ public class PlayerController {
         boolean running = true;
 
         while (running) {
-            List<Deck> myDecks = deckService.getMyDecks(caller);
+            List<Deck> myDecks = getMyDecksForSessionGameType(caller);
             printDeckNames(myDecks);
 
             System.out.println("\n--- GESTIONE MAZZI ---");
@@ -85,11 +171,15 @@ public class PlayerController {
             System.out.print("Scelta: ");
 
             String choice = scanner.nextLine().trim();
-            switch (choice) {
-                case "1" -> selezionaMazzoFlow(caller, myDecks);
-                case "2" -> creaMazzoFlow(caller);
-                case "3" -> running = false;
-                default -> System.out.println("Scelta non valida.");
+            try {
+                switch (choice) {
+                    case "1" -> selezionaMazzoFlow(caller, myDecks);
+                    case "2" -> creaMazzoFlow(caller);
+                    case "3" -> running = false;
+                    default -> System.out.println("Scelta non valida.");
+                }
+            } catch (Exception e) {
+                System.out.println("Errore: " + e.getMessage());
             }
         }
     }
@@ -117,14 +207,18 @@ public class PlayerController {
             System.out.print("Scelta: ");
 
             String action = scanner.nextLine().trim();
-            switch (action) {
-                case "1" -> modificaMazzoFlow(caller, selectedDeck.getDeckId());
-                case "2" -> {
-                    eliminaMazzoFlow(caller, selectedDeck.getDeckId());
-                    running = false;
+            try {
+                switch (action) {
+                    case "1" -> modificaMazzoFlow(caller, selectedDeck.getDeckId());
+                    case "2" -> {
+                        eliminaMazzoFlow(caller, selectedDeck.getDeckId());
+                        running = false;
+                    }
+                    case "3" -> running = false;
+                    default -> System.out.println("Scelta non valida.");
                 }
-                case "3" -> running = false;
-                default -> System.out.println("Scelta non valida.");
+            } catch (Exception e) {
+                System.out.println("Errore: " + e.getMessage());
             }
         }
     }
@@ -141,12 +235,16 @@ public class PlayerController {
             System.out.print("Scelta: ");
 
             String choice = scanner.nextLine().trim();
-            switch (choice) {
-                case "1" -> cambiaNomeMazzoFlow(caller, deckId);
-                case "2" -> aggiungiCartaAlMazzoFlow(caller, deckId);
-                case "3" -> rimuoviCartaDalMazzoFlow(caller, deckId);
-                case "4" -> running = false;
-                default -> System.out.println("Scelta non valida.");
+            try {
+                switch (choice) {
+                    case "1" -> cambiaNomeMazzoFlow(caller, deckId);
+                    case "2" -> aggiungiCartaAlMazzoFlow(caller, deckId);
+                    case "3" -> rimuoviCartaDalMazzoFlow(caller, deckId);
+                    case "4" -> running = false;
+                    default -> System.out.println("Scelta non valida.");
+                }
+            } catch (Exception e) {
+                System.out.println("Errore: " + e.getMessage());
             }
         }
     }
@@ -292,25 +390,29 @@ public class PlayerController {
             System.out.print("Scelta: ");
 
             String choice = scanner.nextLine();
-            GameType gameType = UserSession.getInstance().getGameType();
-            if (gameType == null) {
-                throw new IllegalStateException("Seleziona prima un gioco.");
-            }
-
-            switch (choice) {
-                case "1" -> {
-                    List<Card> cards = cardService.getCardsByGameType(gameType);
-                    printCards(cards);
+            try {
+                GameType gameType = UserSession.getInstance().getGameType();
+                if (gameType == null) {
+                    throw new IllegalStateException("Seleziona prima un gioco.");
                 }
-                case "2" -> {
-                    System.out.print("Inserisci nome (anche parziale): ");
-                    String keyword = scanner.nextLine();
 
-                    List<Card> results = cardService.searchCardsByName(gameType, keyword);
-                    printCards(results);
+                switch (choice) {
+                    case "1" -> {
+                        List<Card> cards = cardService.getCardsByGameType(gameType);
+                        printCards(cards);
+                    }
+                    case "2" -> {
+                        System.out.print("Inserisci nome (anche parziale): ");
+                        String keyword = scanner.nextLine();
+
+                        List<Card> results = cardService.searchCardsByName(gameType, keyword);
+                        printCards(results);
+                    }
+                    case "3" -> running = false;
+                    default -> System.out.println("Scelta non valida.");
                 }
-                case "3" -> running = false;
-                default -> System.out.println("Scelta non valida.");
+            } catch (Exception e) {
+                System.out.println("Errore: " + e.getMessage());
             }
         }
     }
@@ -323,7 +425,7 @@ public class PlayerController {
         }
 
         showPendingNotifications();
-        tournamentService.updateTournamentStatusesAutomatically();
+        tournamentStatusController.syncTournamentStatuses();
 
         boolean running = true;
         while (running) {
@@ -340,11 +442,15 @@ public class PlayerController {
             System.out.print("Scelta: ");
 
             String choice = scanner.nextLine().trim();
-            switch (choice) {
-                case "1" -> iscrivitiATorneoFlow(caller, approvedTournaments);
-                case "2" -> mieiTorneiFlow(caller);
-                case "3" -> running = false;
-                default -> System.out.println("Scelta non valida.");
+            try {
+                switch (choice) {
+                    case "1" -> iscrivitiATorneoFlow(caller, approvedTournaments);
+                    case "2" -> mieiTorneiFlow(caller);
+                    case "3" -> running = false;
+                    default -> System.out.println("Scelta non valida.");
+                }
+            } catch (Exception e) {
+                System.out.println("Errore: " + e.getMessage());
             }
         }
     }
@@ -364,7 +470,7 @@ public class PlayerController {
         boolean chooseDeck = true;
         while (chooseDeck) {
             System.out.println("\nScegli il mazzo:");
-            List<Deck> myDecks = deckService.getMyDecks(caller);
+            List<Deck> myDecks = getMyDecksForSessionGameType(caller);
             printDeckNames(myDecks);
 
             System.out.println("1) Seleziona mazzo");
@@ -372,43 +478,58 @@ public class PlayerController {
             System.out.print("Scelta: ");
 
             String choice = scanner.nextLine().trim();
-            switch (choice) {
-                case "1" -> {
-                    if (myDecks.isEmpty()) {
-                        System.out.println("Non hai mazzi disponibili.");
-                        continue;
+            try {
+                switch (choice) {
+                    case "1" -> {
+                        if (myDecks.isEmpty()) {
+                            System.out.println("Non hai mazzi disponibili.");
+                            continue;
+                        }
+
+                        int deckId = readDeckId();
+                        Deck selectedDeck = myDecks.stream()
+                                .filter(d -> d.getDeckId() == deckId)
+                                .findFirst()
+                                .orElseThrow(() -> new IllegalArgumentException("Mazzo non trovato tra i tuoi mazzi."));
+
+                        stampaCarteNelMazzo(selectedDeck.getDeckId());
+
+                        System.out.print("Confermi iscrizione al torneo con questo mazzo? (si/no): ");
+                        String confirm = scanner.nextLine().trim().toLowerCase();
+                        if (confirm.equals("si") || confirm.equals("s")) {
+                            Registration registration = new Registration(selectedTournament, caller, selectedDeck);
+                            registrationService.registerUserToTournament(caller, selectedTournament.getTournamentId(), registration);
+                            System.out.println("Iscrizione completata con successo.");
+                            chooseDeck = false;
+                        } else if (confirm.equals("no") || confirm.equals("n")) {
+                            System.out.println("Iscrizione annullata. Torno alla lista mazzi.");
+                        } else {
+                            throw new IllegalArgumentException("Scelta non valida. Inserisci 'si' oppure 'no'.");
+                        }
                     }
-
-                    int deckId = readDeckId();
-                    Deck selectedDeck = myDecks.stream()
-                            .filter(d -> d.getDeckId() == deckId)
-                            .findFirst()
-                            .orElseThrow(() -> new IllegalArgumentException("Mazzo non trovato tra i tuoi mazzi."));
-
-                    stampaCarteNelMazzo(selectedDeck.getDeckId());
-
-                    System.out.print("Confermi iscrizione al torneo con questo mazzo? (si/no): ");
-                    String confirm = scanner.nextLine().trim().toLowerCase();
-                    if (confirm.equals("si") || confirm.equals("s")) {
-                        Registration registration = new Registration(selectedTournament, caller, selectedDeck);
-                        registrationService.registerUserToTournament(caller, selectedTournament.getTournamentId(), registration);
-                        System.out.println("Iscrizione completata con successo.");
-                        chooseDeck = false;
-                    } else if (confirm.equals("no") || confirm.equals("n")) {
-                        System.out.println("Iscrizione annullata. Torno alla lista mazzi.");
-                    } else {
-                        throw new IllegalArgumentException("Scelta non valida. Inserisci 'si' oppure 'no'.");
-                    }
+                    case "2" -> chooseDeck = false;
+                    default -> System.out.println("Scelta non valida.");
                 }
-                case "2" -> chooseDeck = false;
-                default -> System.out.println("Scelta non valida.");
+            } catch (Exception e) {
+                System.out.println("Errore: " + e.getMessage());
             }
         }
     }
 
+    private List<Deck> getMyDecksForSessionGameType(User caller) throws SQLException {
+        GameType sessionGameType = UserSession.getInstance().getGameType();
+        if (sessionGameType == null) {
+            throw new IllegalStateException("GameType non selezionato in sessione.");
+        }
+
+        return deckService.getMyDecks(caller).stream()
+                .filter(deck -> deck.getGameType() == sessionGameType)
+                .toList();
+    }
+
     private void mieiTorneiFlow(User caller) throws SQLException {
         showPendingNotifications();
-        tournamentService.updateTournamentStatusesAutomatically();
+        tournamentStatusController.syncTournamentStatuses();
 
         boolean running = true;
         while (running) {
@@ -428,22 +549,26 @@ public class PlayerController {
             System.out.print("Scelta: ");
 
             String choice = scanner.nextLine().trim();
-            switch (choice) {
-                case "1" -> {
-                    if (myTournaments.isEmpty()) {
-                        System.out.println("Non sei iscritto a nessun torneo.");
-                        continue;
+            try {
+                switch (choice) {
+                    case "1" -> {
+                        if (myTournaments.isEmpty()) {
+                            System.out.println("Non sei iscritto a nessun torneo.");
+                            continue;
+                        }
+                        int tournamentId = readTournamentId();
+                        boolean exists = myTournaments.stream().anyMatch(t -> t.getTournamentId() == tournamentId);
+                        if (!exists) {
+                            throw new IllegalArgumentException("Torneo non trovato tra i tuoi tornei.");
+                        }
+                        registrationService.unregisterFromTournament(caller, tournamentId);
+                        System.out.println("Disiscrizione completata.");
                     }
-                    int tournamentId = readTournamentId();
-                    boolean exists = myTournaments.stream().anyMatch(t -> t.getTournamentId() == tournamentId);
-                    if (!exists) {
-                        throw new IllegalArgumentException("Torneo non trovato tra i tuoi tornei.");
-                    }
-                    registrationService.unregisterFromTournament(caller, tournamentId);
-                    System.out.println("Disiscrizione completata.");
+                    case "2" -> running = false;
+                    default -> System.out.println("Scelta non valida.");
                 }
-                case "2" -> running = false;
-                default -> System.out.println("Scelta non valida.");
+            } catch (Exception e) {
+                System.out.println("Errore: " + e.getMessage());
             }
         }
     }

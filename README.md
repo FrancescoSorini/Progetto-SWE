@@ -29,13 +29,15 @@ e quindi è importante assicurarsi che tutto funzioni come previsto dopo ogni mo
 Specialmente per i test della Services.
 
 ## TODO CODICE
-- Errore conteggio iscrizioni nella lista dentro "I miei tornei"
-- Controllare che utente non veda tornei "scaduti" nella lista "Check Tornei"
-- Automatizzare il cambio di status tornei quando diventano full o si supera la deadline / start date con una classe controller apposita
-- Rimuovi scelta gametype da creazione torneo, in quanto si sceglie il game type al login
-- Formattare data iscrizione tornei in modo più leggibile
+- Errore conteggio iscrizioni nella lista dentro "I miei tornei" (OK)
+- Aggiungere sottomenù player per area personale per modificare dati (username, email, password) (OK)
+- Modificare flusso per tornare a scelta gametype senza dover rifare login (OK)
+- Controllare che utente non veda tornei "scaduti" nella lista "Check Tornei" (OK)
+- Automatizzare il cambio di status tornei quando diventano full o si supera la deadline / start date con una classe controller apposita (OK)
+- Rimuovi scelta gametype da creazione torneo, in quanto si sceglie il game type al login (OK)
+- Formattare data iscrizione tornei in modo più leggibile (OK)
 -----------------------------------------------------------------------------------
-- Correggere comportamenti errati nella CLI con messaggi di errore più chiari.
+- Correggere comportamenti errati nella CLI con messaggi di errore più chiari. (OK)
 -----------------------------------------------------------------------------------
 - Testare DomainModel, Services e Controllers
 - Controlla anche test DAO

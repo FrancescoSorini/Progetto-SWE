@@ -87,27 +87,27 @@ public class TournamentService {
     // ============================================================================
     public void updateTournamentStatusesAutomatically() throws SQLException {
         List<Tournament> tournaments = tournamentDAO.getAllTournaments();
+        LocalDate today = LocalDate.now();
 
         for (Tournament t : tournaments) {
-            if (t.getStatus() == TournamentStatus.APPROVED && LocalDate.now().isAfter(t.getDeadline())) {
+            // APPROVED -> READY quando deadline raggiunta/superata (giorno incluso) o torneo full
+            if (t.getStatus() == TournamentStatus.APPROVED &&
+                    (t.isFull() || !today.isBefore(t.getDeadline()))) {
                 attachObservers(t);
                 t.setStatus(TournamentStatus.READY);
                 tournamentDAO.updateTournament(t);
             }
 
-            if (t.getStatus() == TournamentStatus.APPROVED && t.isFull()) {
-                attachObservers(t);
-                t.setStatus(TournamentStatus.READY);
-                tournamentDAO.updateTournament(t);
-            }
-
-            if (t.getStatus() == TournamentStatus.READY && LocalDate.now().isEqual(t.getStartDate())) {
+            // READY -> ONGOING quando data corrente = startDate
+            if (t.getStatus() == TournamentStatus.READY && today.isEqual(t.getStartDate())) {
                 attachObservers(t);
                 t.setStatus(TournamentStatus.ONGOING);
                 tournamentDAO.updateTournament(t);
             }
 
-            if (t.getStatus() == TournamentStatus.ONGOING && LocalDate.now().isAfter(t.getStartDate())) {
+            // READY/ONGOING -> FINISHED quando data corrente > startDate
+            if ((t.getStatus() == TournamentStatus.READY || t.getStatus() == TournamentStatus.ONGOING)
+                    && today.isAfter(t.getStartDate())) {
                 attachObservers(t);
                 t.setStatus(TournamentStatus.FINISHED);
                 tournamentDAO.updateTournament(t);

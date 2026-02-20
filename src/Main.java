@@ -8,6 +8,7 @@ import Controllers.GuestController;
 import Controllers.OrganizerController;
 import Controllers.PlayerController;
 import Controllers.RoleMenuController;
+import Controllers.TournamentStatusController;
 import ORM.connection.DatabaseConnection;
 
 import java.util.Scanner;
@@ -20,13 +21,16 @@ public class Main {
     private static final DeckService deckService = new DeckService(DatabaseConnection.getConnection());
     private static final TournamentService tournamentService = new TournamentService(DatabaseConnection.getConnection());
     private static final RegistrationService registrationService = new RegistrationService(DatabaseConnection.getConnection());
+    private static final TournamentStatusController tournamentStatusController = new TournamentStatusController(tournamentService);
 
     public static void main(String[] args) {
         PlayerController playerController = new PlayerController(
-                scanner, cardService, deckService, tournamentService, registrationService
+                scanner, cardService, deckService, tournamentService, registrationService, tournamentStatusController, userService
         );
         AdminController adminController = new AdminController(scanner, userService, cardService, tournamentService);
-        OrganizerController organizerController = new OrganizerController(scanner, tournamentService, registrationService);
+        OrganizerController organizerController = new OrganizerController(
+                scanner, tournamentService, registrationService, tournamentStatusController, userService
+        );
         RoleMenuController roleMenuController =
                 new RoleMenuController(playerController, adminController, organizerController);
         GuestController guestController = new GuestController(scanner, userService, roleMenuController);

@@ -96,11 +96,9 @@ public class RegistrationDAO {
                     Deck deck = new Deck("", user);
                     deck.setDeckId(rs.getInt("reg_deck"));
 
-                    // Ottieni il torneo completo (senza ricaricare le registrazioni per evitare loop)
+                    // Ottieni il torneo completo
                     TournamentDAO tempDAO = new TournamentDAO(connection);
                     Tournament tournament = tempDAO.getTournamentById(rs.getInt("tournament_id"));
-                    // Rimuovi le registrazioni dal torneo per evitare loop
-                    tournament.setRegistrations(new ArrayList<>());
 
                     Registration registration = new Registration(tournament, user, deck);
                     registration.setRegistrationDate(rs.getTimestamp("registration_date").toLocalDateTime());
