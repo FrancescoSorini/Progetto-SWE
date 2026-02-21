@@ -119,6 +119,9 @@ public class TournamentService {
     // 6) GETTERS
     // ============================================================================
     public Tournament getTournamentById(int tournamentId) throws SQLException {
+        //
+        // Serve mai chiamare un singolo specifico torneo? Lasciamola per ora
+        //
         return tournamentDAO.getTournamentById(tournamentId);
     }
 
@@ -127,38 +130,15 @@ public class TournamentService {
     }
 
     public List<Tournament> getTournamentsByOrganizer(User caller, int organizerId) throws SQLException {
-        return tournamentDAO.getAllTournaments()
-                .stream()
-                .filter(t -> t.getOrganizer().getUserId() == organizerId)
-                .toList();
+        return tournamentDAO.getTournamentsByOrganizer(organizerId);
     }
 
     public List<Tournament> getTournamentsByGameType(GameType gameType) throws SQLException {
-        return tournamentDAO.getAllTournaments()
-                .stream()
-                .filter(t -> t.getGameType() == gameType)
-                .toList();
+        return tournamentDAO.getTournamentsByGameType(gameType);
     }
 
     public List<Tournament> getTournamentsByStatus(TournamentStatus status) throws SQLException {
-        return tournamentDAO.getAllTournaments()
-                .stream()
-                .filter(t -> t.getStatus() == status)
-                .toList();
-    }
-
-    public List<Tournament> getPendingTournaments() throws SQLException {
-        return tournamentDAO.getAllTournaments()
-                .stream()
-                .filter(t -> t.getStatus() == TournamentStatus.PENDING)
-                .toList();
-    }
-
-    public List<Tournament> getApprovedTournaments() throws SQLException {
-        return tournamentDAO.getAllTournaments()
-                .stream()
-                .filter(t -> t.getStatus() == TournamentStatus.APPROVED)
-                .toList();
+        return tournamentDAO.getTournamentsByStatus(status);
     }
 
     // ============================================================================

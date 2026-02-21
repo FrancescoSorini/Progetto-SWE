@@ -102,8 +102,6 @@ public class TestCardDAO {
         assertNotNull(updated);
     }
 
-
-    /*
     @Test
     @Order(7)
     void testDeleteCard() throws SQLException {
@@ -113,5 +111,4 @@ public class TestCardDAO {
         Card deleted = cardDAO.getCardById(card.getCardId());
         assertNull(deleted, "La carta dovrebbe essere stata eliminata");
     }
-    */
 }
