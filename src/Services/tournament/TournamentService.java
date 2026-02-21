@@ -148,7 +148,7 @@ public class TournamentService {
         if (t.getName() == null || t.getName().isBlank()) {
             throw new IllegalArgumentException("Tournament name cannot be empty.");
         }
-        if (t.getCapacity() <= 1) {
+        if (t.getCapacity() < 1) {
             throw new IllegalArgumentException("Capacity must be positive.");
         }
         if (t.getDeadline() == null || t.getStartDate() == null) {

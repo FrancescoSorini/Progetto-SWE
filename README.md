@@ -30,7 +30,7 @@ Specialmente per i test della Services.
 
 ## TODO CODICE
 -----------------------------------------------------------------------------------
-- Testare Services e Controllers
+- Testare Controllers
 
 ## TODO DOCUMENTAZIONE
 - DatabaseConnection: esplicitare l'uso del singleton per gestire la connessione al database in modo efficiente e sicuro.
