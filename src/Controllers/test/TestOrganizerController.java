@@ -107,7 +107,7 @@ public class TestOrganizerController {
         tournamentService.approveTournament(organizer, approved.getTournamentId());
         approvedTournamentId = approved.getTournamentId();
 
-        Tournament ready = buildTournament("OrgReady", TournamentStatus.PENDING, LocalDate.now().minusDays(2), LocalDate.now().plusDays(3));
+        Tournament ready = buildTournament("OrgReady", TournamentStatus.PENDING, LocalDate.now().plusDays(2), LocalDate.now().plusDays(3));
         tournamentService.createTournament(organizer, ready);
         tournamentService.approveTournament(organizer, ready.getTournamentId());
         registrationService.registerUserToTournament(player2, ready.getTournamentId(),

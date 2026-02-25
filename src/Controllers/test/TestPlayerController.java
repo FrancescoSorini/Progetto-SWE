@@ -209,7 +209,7 @@ public class TestPlayerController {
     void test06_gestioneMazziRenameDeck() throws Exception {
         Deck temp = deckService.createDeck(player, "PTempRename", GameType.YUGIOH);
         loginAsPlayer(GameType.YUGIOH);
-        String cli = "1\n1\n" + temp.getDeckId() + "\n1\nPTempRenamed\n4\n3\n3\n6\n";
+        String cli = "1\n1\n" + temp.getDeckId() + "\n1\n1\nPTempRenamed\n4\n3\n3\n6\n";
         buildController(cli).playerMenu();
 
         assertEquals("PTempRenamed", deckService.getDeckById(temp.getDeckId()).getDeckName());
