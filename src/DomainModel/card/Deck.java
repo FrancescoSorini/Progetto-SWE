@@ -47,7 +47,6 @@ public class Deck {
     //SETTER
     public void setDeckId(int deckId) { this.deckId = deckId; }
     public void setDeckName(String deckName) { this.deckName = deckName; }
-    public void setOwner(User owner) { this.owner = owner; }
     public void setCards(List<Card> cards) { this.cards = cards; }
     public void setGameType(GameType gameType) { this.gameType = gameType; }
 
@@ -86,22 +85,6 @@ public class Deck {
         return cards.size();
     }
 
-    /* Verifica se il deck è valido: nome non nullo, owner non nullo, tutte le carte dello stesso tipo
-    public boolean isValid() {
-        if (deckName == null || owner == null) {
-            return false;
-        }
-        else {
-            CardType firstType = cards.get(0).getType();
-            for (Card card : cards) {
-                if (card == null || card.getType() != firstType) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-    */
 
     //Sovrascrivo equals per confrontare i deck in base al loro ID
     @Override

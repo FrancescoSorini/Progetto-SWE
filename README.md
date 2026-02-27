@@ -13,25 +13,9 @@ Abbiamo collegato il progetto ad un database PostgreSQL usando pgAdmin4.
 Ogni classe DAO fornisce metodi per eseguire operazioni CRUD (Create, Read, Update, Delete) sulle entità del Domain Model.
 Abbiamo poi fatto dei test per verificare il corretto funzionamento delle operazioni di accesso ai dati utilizando JUnit.
 
-## Business Logic
-La cartella `business_logic` è destinata a contenere la logica di business del sistema.
-Si effettuano i vari controlli per interagire con gli oggetti del Domain Model e le operazioni sui dati tramite le classi DAO.
-Ad esempio, le regole per la registrazione ai tornei, la gestione dei deck e l'autenticazione degli utenti saranno implementate qui.
-Abbiamo preferito creare una classe apposita per gestire la sessione di un utente autenticato, 
-in modo da mantenere traccia dello stato dell'utente e delle sue caratteristiche (se è Admin, Organizer o Player)
-durante l'interazione con il sistema.
+## Services
 
-## Testing
-Stiamo sviluppando l'interfaccia CLI per far funzionare l'applicazione.
-Dobbiamo rifare i test, una volta che l'interfaccia sarà pronta, per verificare che tutte le funzionalità siano correttamente implementate e funzionanti.
-Questo perchè durante lo sviluppo della CLI potrebbero venirci in mente nuove funzionilità da aggiungere o modificare, 
-e quindi è importante assicurarsi che tutto funzioni come previsto dopo ogni modifica.
-Specialmente per i test della Services.
+## Controllers
 
-## TODO CODICE
------------------------------------------------------------------------------------
-- Testare Controllers
+## Testing 
 
-## TODO DOCUMENTAZIONE
-- DatabaseConnection: esplicitare l'uso del singleton per gestire la connessione al database in modo efficiente e sicuro.
-- Modifica Use Case Diagram con le nuove funzioni aggiunte nel main

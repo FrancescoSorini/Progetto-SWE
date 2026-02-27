@@ -89,30 +89,7 @@ public class Tournament extends TournamentSubject {
         return registrations.size() >= capacity;
     }
 
-
     public boolean isStarted() {
         return LocalDate.now().isAfter(startDate);
     }
-
-    public void printTournamentInfo(List<Tournament> tournaments){
-        if (tournaments.isEmpty()) {
-            System.out.println("Nessun torneo trovato.");
-            return;
-        }
-
-        for (Tournament t : tournaments) {
-            System.out.println("----------------------");
-            System.out.println("ID: " + t.getTournamentId());
-            System.out.println("Nome: " + t.getName());
-            System.out.println("Descrizione: " + t.getDescription());
-            System.out.println("Organizzatore: " + t.getOrganizer().getUsername());
-            System.out.println("Capacità: " + t.getCapacity());
-            System.out.println("Iscrizioni: " + t.getRegistrations().size());
-            System.out.println("Deadline iscrizioni: " + t.getDeadline());
-            System.out.println("Data inizio: " + t.getStartDate());
-            System.out.println("Stato: " + t.getStatus());
-            System.out.println("Gioco: " + t.getGameType());
-        }
-    }
-
 }

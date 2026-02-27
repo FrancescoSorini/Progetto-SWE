@@ -28,6 +28,5 @@ public class Registration {
     public void setTournament(Tournament tournament) { this.tournament = tournament; }
     public void setUser(User user) { this.user = user; }
     public void setRegistrationDate(LocalDateTime registrationDate) { this.registrationDate = registrationDate; }
-    public void setRegDeck(Deck regDeckId) { this.regDeck = regDeckId; }
 
 }

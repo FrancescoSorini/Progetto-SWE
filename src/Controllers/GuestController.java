@@ -96,6 +96,7 @@ public class GuestController {
         System.out.println("1) Magic");
         System.out.println("2) Yu-Gi-Oh");
         System.out.println("3) Pokemon");
+        System.out.println("4) Esci");
         System.out.print("Scelta: ");
 
         String choice = scanner.nextLine();
@@ -104,6 +105,10 @@ public class GuestController {
             case "1" -> UserSession.getInstance().setGameType(GameType.MAGIC);
             case "2" -> UserSession.getInstance().setGameType(GameType.YUGIOH);
             case "3" -> UserSession.getInstance().setGameType(GameType.POKEMON);
+            case "4" -> {
+                System.out.println("Arrivederci!");
+                System.exit(0);
+            }
             default -> {
                 System.out.println("Scelta non valida.");
                 selectGame();
