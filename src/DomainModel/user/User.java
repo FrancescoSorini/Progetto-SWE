@@ -11,8 +11,6 @@ public class User {
     private String pwd;
     private boolean enabled;
     private Role role;
-    private List<Deck> decks;// 1-N
-    private List<Registration> registrations; // N-M tramite Registrations
 
     // COSTRUTTORI
     public User() {}
