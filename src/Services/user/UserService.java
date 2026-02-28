@@ -103,6 +103,10 @@ public class UserService {
         else {
         userDAO.updateUserRole(targetUserId, newRole);
         }
+
+        if (!userTarget.isEnabled()){
+            throw new IllegalStateException("User non modificabile in quando disabilitato");
+        }
     }
 
     // ============================================================

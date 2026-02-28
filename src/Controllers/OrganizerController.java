@@ -427,8 +427,7 @@ public class OrganizerController {
         User organizer = ControllerGuards.requireRole(Role.ORGANIZER);
 
         System.out.println("\n--- CREA TORNEO ---");
-        System.out.print("Nome torneo: ");
-        String name = scanner.nextLine().trim();
+        String name = readTournamentName();
 
         System.out.print("Descrizione: ");
         String description = scanner.nextLine().trim();
@@ -455,6 +454,15 @@ public class OrganizerController {
                 .stream()
                 .filter(t -> t.getStatus() == status)
                 .toList();
+    }
+
+    private String readTournamentName() {
+        System.out.print("Nome torneo: ");
+        String name = scanner.nextLine().trim();
+        if (name.isBlank()) {
+            throw new IllegalArgumentException("Nome torneo non valido.");
+        }
+        return name;
     }
 
     private int readCapacity() {
