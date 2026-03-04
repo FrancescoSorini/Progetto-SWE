@@ -13,7 +13,7 @@ public class UserSession {
     private static UserSession instance;
     private static User currentUser;
     private GameType currentGameType;
-    private static final Map<Integer, List<String>> notificationsByUserId = new HashMap<>();
+    private static final Map<Integer, List<SessionNotification>> notificationsByUserId = new HashMap<>();
 
     private UserSession() {}
 
@@ -77,16 +77,53 @@ public class UserSession {
     }
 
     public static void addNotificationForUser(int userId, String message) {
-        notificationsByUserId.computeIfAbsent(userId, key -> new ArrayList<>()).add(message);
+        addNotificationForUser(userId, message, null);
     }
 
     public static List<String> getAndClearNotificationsForCurrentUser() {
+        return getAndClearNotificationsForCurrentUser(null);
+    }
+
+    public static void addNotificationForUser(int userId, String message, GameType gameType) {
+        notificationsByUserId
+                .computeIfAbsent(userId, key -> new ArrayList<>())
+                .add(new SessionNotification(message, gameType));
+    }
+
+    public static List<String> getAndClearNotificationsForCurrentUser(GameType selectedGameType) {
         if (!isLoggedIn()) {
             return List.of();
         }
+
         int userId = currentUser.getUserId();
-        List<String> messages = notificationsByUserId.getOrDefault(userId, new ArrayList<>());
-        notificationsByUserId.remove(userId);
-        return messages;
+        List<SessionNotification> notifications = notificationsByUserId.getOrDefault(userId, new ArrayList<>());
+
+        List<SessionNotification> matching = notifications.stream()
+                .filter(n -> selectedGameType == null || n.gameType == null || n.gameType == selectedGameType)
+                .toList();
+
+        List<SessionNotification> notMatching = notifications.stream()
+                .filter(n -> !(selectedGameType == null || n.gameType == null || n.gameType == selectedGameType))
+                .toList();
+
+        if (notMatching.isEmpty()) {
+            notificationsByUserId.remove(userId);
+        } else {
+            notificationsByUserId.put(userId, new ArrayList<>(notMatching));
+        }
+
+        return matching.stream()
+                .map(n -> n.message)
+                .toList();
+    }
+
+    private static class SessionNotification {
+        private final String message;
+        private final GameType gameType;
+
+        private SessionNotification(String message, GameType gameType) {
+            this.message = message;
+            this.gameType = gameType;
+        }
     }
 }

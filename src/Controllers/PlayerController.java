@@ -363,6 +363,7 @@ public class PlayerController {
             System.out.println("ID: " + deck.getDeckId());
             System.out.println("Nome: " + deck.getDeckName());
         }
+        System.out.println("----------------------");
     }
 
     private void printCardsWithId(List<Card> cards) {
@@ -376,6 +377,7 @@ public class PlayerController {
             System.out.println("Nome: " + card.getName());
             System.out.println("GameType: " + card.getType());
         }
+        System.out.println("----------------------");
     }
 
     public void catalogoCarteMenu() throws SQLException {
@@ -603,10 +605,12 @@ public class PlayerController {
             System.out.println("GameType: " + tournament.getGameType());
             System.out.println("Status: " + tournament.getStatus());
         }
+        System.out.println("----------------------");
     }
 
     private void showPendingNotifications() {
-        List<String> notifications = UserSession.getAndClearNotificationsForCurrentUser();
+        GameType sessionGameType = UserSession.getInstance().getGameType();
+        List<String> notifications = UserSession.getAndClearNotificationsForCurrentUser(sessionGameType);
         if (notifications.isEmpty()) {
             return;
         }
@@ -615,5 +619,6 @@ public class PlayerController {
         for (String message : notifications) {
             System.out.println("* " + message);
         }
+        System.out.println("----------------------");
     }
 }

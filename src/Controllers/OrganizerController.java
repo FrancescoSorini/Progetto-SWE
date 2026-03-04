@@ -450,9 +450,15 @@ public class OrganizerController {
     }
 
     private List<Tournament> getOrganizerTournamentsByStatus(User caller, TournamentStatus status) throws SQLException {
+        GameType sessionGameType = UserSession.getInstance().getGameType();
+        if (sessionGameType == null) {
+            throw new IllegalStateException("GameType non selezionato in sessione.");
+        }
+
         return tournamentService.getTournamentsByOrganizer(caller, caller.getUserId())
                 .stream()
                 .filter(t -> t.getStatus() == status)
+                .filter(t -> t.getGameType() == sessionGameType)
                 .toList();
     }
 
@@ -558,6 +564,7 @@ public class OrganizerController {
             System.out.println("GameType: " + tournament.getGameType());
             System.out.println("Status: " + tournament.getStatus());
         }
+        System.out.println("----------------------");
     }
 
     private void printParticipants(List<Registration> participants) {
@@ -577,6 +584,7 @@ public class OrganizerController {
             System.out.println("Deck ID: " + registration.getRegDeck().getDeckId());
             System.out.println("Data/Ora iscrizione: " + formattedRegistrationDateTime);
         }
+        System.out.println("----------------------");
     }
 
     private void printPersonalData(User user) {

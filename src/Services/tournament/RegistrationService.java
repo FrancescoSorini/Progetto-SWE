@@ -81,7 +81,8 @@ public class RegistrationService {
         registrationDAO.deleteRegistration(tournamentId, userId);
         UserSession.addNotificationForUser(
                 userId,
-                "Sei stato rimosso dal torneo ID " + tournamentId + " dall'organizzatore."
+                "Sei stato rimosso dal torneo ID " + tournamentId + " - Nome: " + tournament.getName() + " dall'organizzatore.",
+                tournament.getGameType()
         );
     }
 

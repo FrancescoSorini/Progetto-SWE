@@ -309,6 +309,7 @@ public class AdminController {
             System.out.println("GameType: " + tournament.getGameType());
             System.out.println("Status: " + tournament.getStatus());
         }
+        System.out.println("----------------------");
     }
 
     private void gestioneCarteMenu() throws SQLException {
@@ -505,6 +506,7 @@ public class AdminController {
             System.out.println("Nome: " + card.getName());
             System.out.println("GameType: " + card.getType());
         }
+        System.out.println("----------------------");
     }
 
     private void printPersonalData(User user) {
