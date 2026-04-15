@@ -184,7 +184,7 @@ public class TestRoleMenuController {
     private static class TrackingAdminController extends AdminController {
         boolean called;
         TrackingAdminController() {
-            super(new Scanner(""), userService, cardService, tournamentService);
+            super(new Scanner(""), userService, cardService, tournamentService, registrationService);
         }
         @Override
         public void adminMenu() {

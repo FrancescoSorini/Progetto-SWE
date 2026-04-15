@@ -5,6 +5,7 @@ import DomainModel.card.Card;
 import DomainModel.tournament.Tournament;
 import DomainModel.tournament.TournamentStatus;
 import Services.card.CardService;
+import Services.tournament.RegistrationService;
 import Services.tournament.TournamentService;
 import Services.user.UserService;
 import Controllers.security.ControllerGuards;
@@ -24,12 +25,20 @@ public class AdminController {
     private final UserService userService;
     private final CardService cardService;
     private final TournamentService tournamentService;
+    private final RegistrationService registrationService;
 
-    public AdminController(Scanner scanner, UserService userService, CardService cardService, TournamentService tournamentService) {
+    public AdminController(
+            Scanner scanner,
+            UserService userService,
+            CardService cardService,
+            TournamentService tournamentService,
+            RegistrationService registrationService
+    ) {
         this.scanner = scanner;
         this.userService = userService;
         this.cardService = cardService;
         this.tournamentService = tournamentService;
+        this.registrationService = registrationService;
     }
 
     public void adminMenu() throws SQLException {
@@ -223,6 +232,12 @@ public class AdminController {
         }
 
         userService.setUserEnabled(caller, targetUserId, enabled);
+        if (!enabled) {
+            int removed = registrationService.unregisterUserFromApprovedOrReadyTournaments(caller, targetUserId);
+            if (removed > 0) {
+                System.out.println("Registrazioni rimosse da tornei APPROVED/READY: " + removed);
+            }
+        }
         System.out.println("Stato utente aggiornato con successo.");
     }
 

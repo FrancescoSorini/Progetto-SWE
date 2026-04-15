@@ -210,7 +210,8 @@ public class TestGuestController {
                     new PlayerController(new Scanner(""), new CardService(connection), new DeckService(connection),
                             new TournamentService(connection), new RegistrationService(connection),
                             new TournamentStatusController(new TournamentService(connection)), new UserService(connection)),
-                    new AdminController(new Scanner(""), new UserService(connection), new CardService(connection), new TournamentService(connection)),
+                    new AdminController(new Scanner(""), new UserService(connection), new CardService(connection),
+                            new TournamentService(connection), new RegistrationService(connection)),
                     new OrganizerController(new Scanner(""), new TournamentService(connection), new RegistrationService(connection),
                             new TournamentStatusController(new TournamentService(connection)), new UserService(connection))
             );

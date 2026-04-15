@@ -81,6 +81,31 @@ public class RegistrationService {
     }
 
     // ====================================================================================
+    // 2b) CANCEL REGISTRATIONS (TARGET USER, BULK FOR SPECIFIC STATUSES)
+    // ====================================================================================
+    // Used for admin ban: remove user from tournaments that are still "active" from a registration standpoint.
+    public int unregisterUserFromApprovedOrReadyTournaments(User caller, int userId) throws SQLException {
+        requireLoggedIn(caller);
+
+        List<Registration> registrations = registrationDAO.getRegistrationsByUser(userId);
+        int removed = 0;
+
+        for (Registration r : registrations) {
+            Tournament t = r.getTournament();
+            if (t == null) {
+                continue;
+            }
+            TournamentStatus status = t.getStatus();
+            if (status == TournamentStatus.APPROVED || status == TournamentStatus.READY) {
+                registrationDAO.deleteRegistration(t.getTournamentId(), userId);
+                removed++;
+            }
+        }
+
+        return removed;
+    }
+
+    // ====================================================================================
     // 3) GET REGISTRATIONS BY USER
     // ====================================================================================
     public List<Registration> getRegistrationsByUser(User caller, int userId) throws SQLException {

@@ -409,14 +409,15 @@ public class OrganizerController {
         }
 
         int tournamentId = readTournamentId();
-        boolean exists = tournaments.stream().anyMatch(t -> t.getTournamentId() == tournamentId);
-        if (!exists) {
-            throw new IllegalArgumentException("Torneo non trovato nella lista.");
-        }
+        Tournament target = tournaments.stream()
+                .filter(t -> t.getTournamentId() == tournamentId)
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Torneo non trovato nella lista."));
 
         System.out.print("Confermi eliminazione torneo? (si/no): ");
         String confirm = scanner.nextLine().trim().toLowerCase();
         if (confirm.equals("si") || confirm.equals("s")) {
+            notifyTournamentDeletedToParticipants(caller, target);
             tournamentService.deleteTournament(caller, tournamentId);
             System.out.println("Torneo eliminato con successo.");
             return;
@@ -427,6 +428,22 @@ public class OrganizerController {
         }
 
         throw new IllegalArgumentException("Scelta non valida. Inserisci 'si' oppure 'no'.");
+    }
+
+    private void notifyTournamentDeletedToParticipants(User caller, Tournament tournament) throws SQLException {
+        List<Registration> participants =
+                registrationService.getRegistrationsByTournament(caller, tournament.getTournamentId());
+        if (participants.isEmpty()) {
+            return;
+        }
+
+        String message = "Il torneo ID " + tournament.getTournamentId()
+                + " - Nome: " + tournament.getName() + " e' stato cancellato dall'organizzatore.";
+
+        participants.stream()
+                .map(r -> r.getUser().getUserId())
+                .distinct()
+                .forEach(userId -> UserSession.addNotificationForUser(userId, message, tournament.getGameType()));
     }
 
     private void createTournamentFlow() throws SQLException {

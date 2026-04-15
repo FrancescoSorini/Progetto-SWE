@@ -283,4 +283,45 @@ public class TestOrganizerController {
         assertEquals(TournamentStatus.ONGOING, tournamentService.getTournamentById(ongoingTournamentId).getStatus());
         assertEquals(TournamentStatus.FINISHED, tournamentService.getTournamentById(finishedTournamentId).getStatus());
     }
+
+    @Test
+    @Order(12)
+    void test12_deleteApprovedTournamentNotifiesParticipants() throws Exception {
+        // Create a fresh APPROVED tournament with a registration.
+        Tournament t = buildTournament("OrgApprovedToDelete", TournamentStatus.PENDING,
+                LocalDate.now().plusDays(2), LocalDate.now().plusDays(4));
+        tournamentService.createTournament(organizer, t);
+        tournamentService.approveTournament(organizer, t.getTournamentId());
+
+        Deck p1Deck = deckDAO.getAllDecksByUser(player1.getUserId()).stream()
+                .filter(d -> d.getGameType() == GameType.YUGIOH)
+                .findFirst()
+                .orElseThrow();
+
+        registrationService.registerUserToTournament(
+                player1,
+                t.getTournamentId(),
+                new Registration(tournamentService.getTournamentById(t.getTournamentId()), player1, p1Deck)
+        );
+
+        // Ensure a clean notification state for player1 before deletion.
+        UserSession.getInstance().login(player1);
+        UserSession.getInstance().setGameType(GameType.YUGIOH);
+        UserSession.getAndClearNotificationsForCurrentUser(GameType.YUGIOH);
+        UserSession.getInstance().logout();
+
+        loginAsOrganizer(GameType.YUGIOH);
+        String cli = "2\n2\n2\n" + t.getTournamentId() + "\nsi\n3\n7\n5\n";
+        buildController(cli).organizerMenu();
+        assertNull(tournamentService.getTournamentById(t.getTournamentId()));
+
+        UserSession.getInstance().login(player1);
+        UserSession.getInstance().setGameType(GameType.YUGIOH);
+        List<String> notifications = UserSession.getAndClearNotificationsForCurrentUser(GameType.YUGIOH);
+        assertTrue(notifications.stream().anyMatch(m ->
+                m.contains("torneo ID " + t.getTournamentId())
+                        && m.contains("Nome: " + t.getName())
+                        && m.contains("cancellato")));
+        UserSession.getInstance().logout();
+    }
 }

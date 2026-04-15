@@ -126,7 +126,7 @@ public class TestAdminController {
     }
 
     private AdminController buildController(String cli) {
-        return new AdminController(new Scanner(cli), userService, cardService, tournamentService);
+        return new AdminController(new Scanner(cli), userService, cardService, tournamentService, registrationService);
     }
 
     private void loginAsAdmin(GameType gt) {
@@ -187,6 +187,14 @@ public class TestAdminController {
         loginAsAdmin(GameType.YUGIOH);
         buildController("2\n1\n2\n" + player.getUserId() + "\nno\n3\n3\n6\n").adminMenu();
         assertFalse(userDAO.getUserById(player.getUserId()).isEnabled());
+
+        // On ban, user is automatically removed from APPROVED/READY tournaments.
+        List<Registration> afterBanRegs = registrationService.getRegistrationsByUser(admin, player.getUserId());
+        boolean hasApprovedOrReady = afterBanRegs.stream().anyMatch(r -> {
+            Tournament t = r.getTournament();
+            return t != null && (t.getStatus() == TournamentStatus.APPROVED || t.getStatus() == TournamentStatus.READY);
+        });
+        assertFalse(hasApprovedOrReady);
 
         loginAsAdmin(GameType.YUGIOH);
         buildController("2\n2\nplayer_ctrl\n2\n" + player.getUserId() + "\nsi\n3\n3\n6\n").adminMenu();
