@@ -47,7 +47,7 @@ public class UserService {
             return null;
         }
         if (!user.isEnabled()) {
-            return null;
+            throw new IllegalStateException("Account disabilitato");
         }
         if (!user.getPassword().equals(password)) {
             return null;

@@ -315,6 +315,12 @@ public class OrganizerController {
                             throw new IllegalArgumentException("Utente non trovato tra i partecipanti.");
                         }
                         registrationService.unregisterUserFromTournament(caller, target.getTournamentId(), userId);
+                        UserSession.addNotificationForUser(
+                                userId,
+                                "Sei stato rimosso dal torneo ID " + target.getTournamentId()
+                                        + " - Nome: " + target.getName() + " dall'organizzatore.",
+                                target.getGameType()
+                        );
                         System.out.println("Iscrizione utente rimossa con successo.");
                     }
                     case "2" -> running = false;

@@ -216,17 +216,8 @@ public class TestRegistrationService {
         Tournament t = createTournament("Cup", TournamentStatus.APPROVED, 8, LocalDate.now().plusDays(1), LocalDate.now().plusDays(2));
         registrationService.registerUserToTournament(player1, t.getTournamentId(), new Registration(t, player1, player1YDeck));
 
-        UserSession.getInstance().login(player1);
-        UserSession.getAndClearNotificationsForCurrentUser();
-        UserSession.getInstance().logout();
-
         registrationService.unregisterUserFromTournament(organizer, t.getTournamentId(), player1.getUserId());
         assertFalse(registrationDAO.isUserRegistered(t.getTournamentId(), player1.getUserId()));
-
-        UserSession.getInstance().login(player1);
-        List<String> notifications = UserSession.getAndClearNotificationsForCurrentUser();
-        assertFalse(notifications.isEmpty());
-        assertTrue(notifications.getFirst().contains("rimosso dal torneo ID " + t.getTournamentId()));
     }
 
     @Test

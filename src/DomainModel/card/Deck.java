@@ -94,6 +94,5 @@ public class Deck {
         Deck deck = (Deck) o;
         return deckId == deck.deckId;
     }
-
 }
 

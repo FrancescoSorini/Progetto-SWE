@@ -63,6 +63,7 @@ public class GuestController {
             throw new IllegalArgumentException("Credenziali non valide.");
         }
 
+
         UserSession.getInstance().login(user);
 
         System.out.println("Login effettuato con successo!");
