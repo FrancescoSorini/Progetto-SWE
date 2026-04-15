@@ -426,8 +426,8 @@ public class PlayerController {
             throw new IllegalStateException("GameType non selezionato in sessione.");
         }
 
-        showPendingNotifications();
         tournamentStatusController.syncTournamentStatuses();
+        showPendingNotifications();
 
         boolean running = true;
         while (running) {
@@ -530,8 +530,8 @@ public class PlayerController {
     }
 
     private void mieiTorneiFlow(User caller) throws SQLException {
-        showPendingNotifications();
         tournamentStatusController.syncTournamentStatuses();
+        showPendingNotifications();
 
         boolean running = true;
         while (running) {

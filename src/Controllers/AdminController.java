@@ -234,6 +234,8 @@ public class AdminController {
         userService.setUserEnabled(caller, targetUserId, enabled);
         if (!enabled) {
             int removed = registrationService.unregisterUserFromApprovedOrReadyTournaments(caller, targetUserId);
+            // Recompute tournament statuses after bulk unregistrations (e.g. READY because full -> APPROVED again).
+            tournamentService.updateTournamentStatusesAutomatically();
             if (removed > 0) {
                 System.out.println("Registrazioni rimosse da tornei APPROVED/READY: " + removed);
             }

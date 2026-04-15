@@ -247,4 +247,33 @@ public class TestAdminController {
         List<User> users = userService.getAllUsers(admin);
         assertTrue(users.size() >= 3);
     }
+
+    @Test
+    @Order(11)
+    void test11_banFreesSlotAndTournamentGoesBackToApprovedIfDeadlineNotPassed() throws Exception {
+        // Build a tournament that becomes READY due to full capacity.
+        Deck playerDeck = deckDAO.getAllDecksByUser(player.getUserId()).stream().findFirst().orElseThrow();
+
+        Tournament fullTournament = buildTournament("FullThenBan", GameType.YUGIOH, TournamentStatus.PENDING);
+        fullTournament.setCapacity(1);
+        tournamentService.createTournament(organizer, fullTournament);
+        tournamentService.approveTournament(organizer, fullTournament.getTournamentId());
+
+        registrationService.registerUserToTournament(
+                player,
+                fullTournament.getTournamentId(),
+                new Registration(tournamentService.getTournamentById(fullTournament.getTournamentId()), player, playerDeck)
+        );
+
+        tournamentService.updateTournamentStatusesAutomatically();
+        assertEquals(TournamentStatus.READY, tournamentService.getTournamentById(fullTournament.getTournamentId()).getStatus());
+
+        // Ban the user; this removes their registration and triggers status recomputation.
+        loginAsAdmin(GameType.YUGIOH);
+        buildController("2\n1\n2\n" + player.getUserId() + "\nno\n3\n3\n6\n").adminMenu();
+
+        Tournament after = tournamentService.getTournamentById(fullTournament.getTournamentId());
+        assertNotNull(after);
+        assertEquals(TournamentStatus.APPROVED, after.getStatus());
+    }
 }

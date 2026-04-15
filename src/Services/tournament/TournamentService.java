@@ -4,13 +4,13 @@ import DomainModel.GameType;
 import DomainModel.tournament.Registration;
 import DomainModel.tournament.Tournament;
 import DomainModel.tournament.TournamentStatus;
-import DomainModel.tournament.observer.UserObserver;
 import DomainModel.user.User;
 import ORM.dao.TournamentDAO;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 public class TournamentService {
@@ -67,7 +67,6 @@ public class TournamentService {
             throw new IllegalStateException("Only PENDING tournaments can be approved.");
         }
 
-        attachObservers(t);
         t.setStatus(TournamentStatus.APPROVED);
         tournamentDAO.updateTournament(t);
     }
@@ -85,34 +84,53 @@ public class TournamentService {
     // ============================================================================
     // 5) AUTO UPDATE (READY / CLOSED)
     // ============================================================================
-    public void updateTournamentStatusesAutomatically() throws SQLException {
+    public List<TournamentStatusChangeEvent> updateTournamentStatusesAutomatically() throws SQLException {
         List<Tournament> tournaments = tournamentDAO.getAllTournaments();
         LocalDate today = LocalDate.now();
+        List<TournamentStatusChangeEvent> events = new ArrayList<>();
 
         for (Tournament t : tournaments) {
+            // READY -> APPROVED if it was READY because "full" but a slot becomes available again,
+            // and the registration window is still open (deadline not reached).
+            if (t.getStatus() == TournamentStatus.READY
+                    && today.isBefore(t.getStartDate())
+                    && !t.isFull()
+                    && t.isRegistrationOpen()) {
+                TournamentStatus old = t.getStatus();
+                t.setStatus(TournamentStatus.APPROVED);
+                tournamentDAO.updateTournament(t);
+                events.add(buildStatusChangeEvent(t, old, TournamentStatus.APPROVED));
+                continue;
+            }
+
             // APPROVED -> READY quando deadline raggiunta/superata (giorno incluso) o torneo full
             if (t.getStatus() == TournamentStatus.APPROVED &&
                     (t.isFull() || !today.isBefore(t.getDeadline()))) {
-                attachObservers(t);
+                TournamentStatus old = t.getStatus();
                 t.setStatus(TournamentStatus.READY);
                 tournamentDAO.updateTournament(t);
+                events.add(buildStatusChangeEvent(t, old, TournamentStatus.READY));
             }
 
             // READY -> ONGOING quando data corrente = startDate
             if (t.getStatus() == TournamentStatus.READY && today.isEqual(t.getStartDate())) {
-                attachObservers(t);
+                TournamentStatus old = t.getStatus();
                 t.setStatus(TournamentStatus.ONGOING);
                 tournamentDAO.updateTournament(t);
+                events.add(buildStatusChangeEvent(t, old, TournamentStatus.ONGOING));
             }
 
             // READY/ONGOING -> FINISHED quando data corrente > startDate
             if ((t.getStatus() == TournamentStatus.READY || t.getStatus() == TournamentStatus.ONGOING)
                     && today.isAfter(t.getStartDate())) {
-                attachObservers(t);
+                TournamentStatus old = t.getStatus();
                 t.setStatus(TournamentStatus.FINISHED);
                 tournamentDAO.updateTournament(t);
+                events.add(buildStatusChangeEvent(t, old, TournamentStatus.FINISHED));
             }
         }
+
+        return events;
     }
 
     // ============================================================================
@@ -162,13 +180,24 @@ public class TournamentService {
         }
     }
 
-    private void attachObservers(Tournament t) {
-        if (t.getRegistrations() == null) {
-            return;
-        }
-        for (Registration r : t.getRegistrations()) {
-            t.addObserver(new UserObserver(r.getUser()));
-        }
+    private TournamentStatusChangeEvent buildStatusChangeEvent(Tournament t, TournamentStatus oldStatus, TournamentStatus newStatus) {
+        List<Integer> userIds = t.getRegistrations() == null
+                ? List.of()
+                : t.getRegistrations().stream()
+                .map(Registration::getUser)
+                .filter(u -> u != null)
+                .map(User::getUserId)
+                .distinct()
+                .toList();
+
+        return new TournamentStatusChangeEvent(
+                t.getTournamentId(),
+                t.getName(),
+                t.getGameType(),
+                oldStatus,
+                newStatus,
+                userIds
+        );
     }
 
     private void checkTournamentIsPending(Tournament tournament) {
